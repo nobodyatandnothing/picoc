@@ -100,7 +100,7 @@ void UnistdFchdir(struct ParseState *Parser, struct Value *ReturnValue,
 void UnistdFdatasync(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-#ifdef F_FULLSYNC
+#ifdef F_FULLFSYNC
     /* Mac OS X equivalent */
     ReturnValue->Val->Integer = fcntl(Param[0]->Val->Integer, F_FULLFSYNC);
 #else
@@ -331,11 +331,13 @@ void UnistdRmdir(struct ParseState *Parser, struct Value *ReturnValue,
     ReturnValue->Val->Integer = rmdir(Param[0]->Val->Pointer);
 }
 
+#if 0
 void UnistdSbrk(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
     ReturnValue->Val->Pointer = sbrk(Param[0]->Val->Integer);
 }
+#endif
 
 void UnistdSetgid(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
@@ -558,7 +560,7 @@ struct LibraryFunction UnistdFunctions[] =
     {UnistdRead, "ssize_t read(int, void*, size_t);"},
     {UnistdReadlink, "int readlink(char*, char*, size_t);"},
     {UnistdRmdir, "int rmdir(char*);"},
-    {UnistdSbrk, "void *sbrk(intptr_t);"},
+/*    {UnistdSbrk, "void *sbrk(intptr_t);"}, */
     {UnistdSetgid, "int setgid(gid_t);"},
     {UnistdSetpgid, "int setpgid(pid_t, pid_t);"},
     {UnistdSetpgrp, "pid_t setpgrp(void);"},
