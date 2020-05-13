@@ -10,6 +10,7 @@
 /* include only picoc.h here - should be able to use it with only the
     external interfaces, no internals from interpreter.h */
 #include "picoc.h"
+#include "stats.h"
 
 
 #if defined(UNIX_HOST) || defined(WIN32)
@@ -66,6 +67,9 @@ int main(int argc, char **argv)
     }
 
     PicocCleanup(&pc);
+
+    stats_print_tokens(0);
+
     return pc.PicocExitValue;
 }
 #endif

@@ -1,6 +1,7 @@
 /* picoc parser - parses source and executes statements */
 #include "picoc.h"
 #include "interpreter.h"
+#include "stats.h"
 
 static enum ParseResult ParseStatementMaybeRun(struct ParseState *Parser,
         int Condition, int CheckTrailingSemicolon);
@@ -606,6 +607,8 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
         statement we have */
     ParserCopy(&PreState, Parser);
     Token = LexGetToken(Parser, &LexerValue, true);
+
+    stats_log_statement(Token, Parser);
 
     switch (Token) {
     case TokenEOF:

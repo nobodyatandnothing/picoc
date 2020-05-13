@@ -1,6 +1,7 @@
 /* picoc expression evaluator - a stack-based expression evaluation system
  * which handles operator precedence */
 #include "interpreter.h"
+#include "stats.h"
 
 
 /* whether evaluation is left to right for a given precedence level */
@@ -1443,6 +1444,9 @@ int ExpressionParse(struct ParseState *Parser, struct Value **Result)
 
         ParserCopy(&PreState, Parser);
         Token = LexGetToken(Parser, &LexValue, true);
+
+        stats_log_expression(Token, Parser);
+
         if ((((int)Token > TokenComma && (int)Token <= (int)TokenOpenBracket) ||
                (Token == TokenCloseBracket && BracketPrecedence != 0)) &&
                (Token != TokenColon || TernaryDepth > 0)) {

@@ -38,6 +38,8 @@ add_executable(picoc
         picoc.h
         platform.c
         platform.h
+        stats.c
+        stats.h
         table.c
         type.c
         variable.c)
