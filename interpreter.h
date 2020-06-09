@@ -174,7 +174,8 @@ enum LexToken {
     /* 0x5c */ TokenEOF,
                TokenEndOfLine,
                TokenEndOfFunction,
-               TokenBackSlash
+               TokenBackSlash,
+               TokenVolatileType
 };
 
 /* used in dynamic memory allocation */
@@ -571,11 +572,11 @@ extern int TypeSizeValue(struct Value *Val, int Compact);
 extern int TypeStackSizeValue(struct Value *Val);
 extern int TypeLastAccessibleOffset(Picoc *pc, struct Value *Val);
 extern int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
-    int *IsStatic);
+    int *IsStatic, int *IsVolatile);
 extern void TypeParseIdentPart(struct ParseState *Parser,
     struct ValueType *BasicTyp, struct ValueType **Typ, char **Identifier);
 extern void TypeParse(struct ParseState *Parser, struct ValueType **Typ,
-    char **Identifier, int *IsStatic);
+    char **Identifier, int *IsStatic, int *IsVolatile);
 extern struct ValueType *TypeGetMatching(Picoc *pc, struct ParseState *Parser,
     struct ValueType *ParentType, enum BaseType Base, int ArraySize, const char *Identifier, int AllowDuplicates);
 extern struct ValueType *TypeCreateOpaqueStruct(Picoc *pc, struct ParseState *Parser,

@@ -121,7 +121,7 @@ struct Value *ParseFunctionDefinition(struct ParseState *Parser,
             break;
         } else {
             /* add a parameter */
-            TypeParse(&ParamParser, &ParamType, &ParamIdentifier, NULL);
+            TypeParse(&ParamParser, &ParamType, &ParamIdentifier, NULL, NULL);
             if (ParamType->Base == TypeVoid) {
                 /* this isn't a real parameter at all - delete it */
                 //ParamCount--;
@@ -338,6 +338,7 @@ void ParseDeclarationAssignment(struct ParseState *Parser,
 int ParseDeclaration(struct ParseState *Parser, enum LexToken Token)
 {
     int IsStatic = false;
+    int IsVolatile = false;
     int FirstVisit = false;
     char *Identifier;
     struct ValueType *BasicType;
@@ -345,7 +346,7 @@ int ParseDeclaration(struct ParseState *Parser, enum LexToken Token)
     struct Value *NewVariable = NULL;
     Picoc *pc = Parser->pc;
 
-    TypeParseFront(Parser, &BasicType, &IsStatic);
+    TypeParseFront(Parser, &BasicType, &IsStatic, &IsVolatile);
     do {
         TypeParseIdentPart(Parser, BasicType, &Typ, &Identifier);
         if ((Token != TokenVoidType && Token != TokenStructType &&
@@ -576,7 +577,7 @@ void ParseTypedef(struct ParseState *Parser)
     struct ValueType **TypPtr;
     struct Value InitValue;
 
-    TypeParse(Parser, &Typ, &TypeName, NULL);
+    TypeParse(Parser, &Typ, &TypeName, NULL, NULL);
 
     if (Parser->Mode == RunModeRun) {
         TypPtr = &Typ;
@@ -737,6 +738,7 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
     case TokenAutoType:
     case TokenRegisterType:
     case TokenExternType:
+    case TokenVolatileType:
         *Parser = PreState;
         CheckTrailingSemicolon = ParseDeclaration(Parser, Token);
         break;

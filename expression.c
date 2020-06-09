@@ -1469,7 +1469,7 @@ int ExpressionParse(struct ParseState *Parser, struct Value **Result)
                         char *CastIdentifier;
                         struct Value *CastTypeValue;
 
-                        TypeParse(Parser, &CastType, &CastIdentifier, NULL);
+                        TypeParse(Parser, &CastType, &CastIdentifier, NULL, NULL);
                         if (LexGetToken(Parser, &LexValue, true) != TokenCloseBracket)
                             ProgramFail(Parser, "brackets not closed");
 
@@ -1668,7 +1668,7 @@ int ExpressionParse(struct ParseState *Parser, struct Value **Result)
 
             PrefixState = false;
             ParserCopy(Parser, &PreState);
-            TypeParse(Parser, &Typ, &Identifier, NULL);
+            TypeParse(Parser, &Typ, &Identifier, NULL, NULL);
             TypeValue = VariableAllocValueFromType(Parser->pc, Parser,
                 &Parser->pc->TypeType, false, NULL, false);
             TypeValue->Val->Typ = Typ;

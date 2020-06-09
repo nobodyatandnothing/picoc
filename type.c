@@ -265,7 +265,7 @@ void TypeParseStruct(struct ParseState *Parser, struct ValueType **Typ,
         STRUCT_TABLE_SIZE, true);
 
     do {
-        TypeParse(Parser, &MemberType, &MemberIdentifier, NULL);
+        TypeParse(Parser, &MemberType, &MemberIdentifier, NULL, NULL);
         if (MemberType == NULL || MemberIdentifier == NULL)
             ProgramFail(Parser, "invalid type in struct");
 
@@ -393,10 +393,11 @@ void TypeParseEnum(struct ParseState *Parser, struct ValueType **Typ)
 
 /* parse a type - just the basic type */
 int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
-    int *IsStatic)
+    int *IsStatic, int *IsVolatile)
 {
     int Unsigned = false;
     int StaticQualifier = false;
+    int VolatileQualifier = false;
     enum LexToken Token;
     struct ParseState Before;
     struct Value *LexerValue;
@@ -408,15 +409,20 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
     ParserCopy(&Before, Parser);
     Token = LexGetToken(Parser, &LexerValue, true);
     while (Token == TokenStaticType || Token == TokenAutoType ||
-            Token == TokenRegisterType || Token == TokenExternType) {
+            Token == TokenRegisterType || Token == TokenExternType ||
+            Token == TokenVolatileType) {
         if (Token == TokenStaticType)
             StaticQualifier = true;
+        else if (Token == TokenVolatileType)
+            VolatileQualifier = true;
 
         Token = LexGetToken(Parser, &LexerValue, true);
     }
 
     if (IsStatic != NULL)
         *IsStatic = StaticQualifier;
+    if (IsVolatile != NULL)
+        *IsVolatile = VolatileQualifier;
 
     /* handle signed/unsigned with no trailing type */
     if (Token == TokenSignedType || Token == TokenUnsignedType) {
@@ -541,7 +547,7 @@ void TypeParseIdentPart(struct ParseState *Parser, struct ValueType *BasicTyp,
             if (*Typ != NULL)
                 ProgramFail(Parser, "bad type declaration");
 
-            TypeParse(Parser, Typ, Identifier, NULL);
+            TypeParse(Parser, Typ, Identifier, NULL, NULL);
             if (LexGetToken(Parser, NULL, true) != TokenCloseBracket)
                 ProgramFail(Parser, "')' expected");
             break;
@@ -577,11 +583,11 @@ void TypeParseIdentPart(struct ParseState *Parser, struct ValueType *BasicTyp,
 
 /* parse a type - a complete declaration including identifier */
 void TypeParse(struct ParseState *Parser, struct ValueType **Typ,
-    char **Identifier, int *IsStatic)
+    char **Identifier, int *IsStatic, int *IsVolatile)
 {
     struct ValueType *BasicType;
 
-    TypeParseFront(Parser, &BasicType, IsStatic);
+    TypeParseFront(Parser, &BasicType, IsStatic, IsVolatile);
     TypeParseIdentPart(Parser, BasicType, Typ, Identifier);
 }
 

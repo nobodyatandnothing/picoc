@@ -327,7 +327,7 @@ void PlatformLibraryInit()
     /* define an example structure */
     Tokens = LexAnalyse(IntrinsicName, StructDefinition, strlen(StructDefinition), NULL);
     LexInitParser(&Parser, StructDefinition, Tokens, IntrinsicName, true, false);
-    TypeParse(&Parser, &ParsedType, &Identifier, &IsStatic);
+    TypeParse(&Parser, &ParsedType, &Identifier, &IsStatic, &IsVolatile);
     HeapFree(Tokens);
 }
 ```

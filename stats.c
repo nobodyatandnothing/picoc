@@ -111,7 +111,8 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenEOF", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenEndOfLine", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenEndOfFunction", {0, 0, 0, 0, 0, 0, 0}},
-        {"TokenBackSlash", {0, 0, 0, 0, 0, 0, 0}}
+        {"TokenBackSlash", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenVolatileType", {0, 0, 0, 0, 0, 0, 0}}
 };
 
 
