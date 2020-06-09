@@ -12,6 +12,7 @@ static void ParseDeclarationAssignment(struct ParseState *Parser,
     struct Value *NewVariable, int DoAssignment);
 static int ParseDeclaration(struct ParseState *Parser, enum LexToken Token);
 static void ParseMacroDefinition(struct ParseState *Parser);
+static void ParsePragma(struct ParseState *Parser);
 static void ParseFor(struct ParseState *Parser);
 static enum RunMode ParseBlock(struct ParseState *Parser, int AbsorbOpenBrace,
     int Condition);
@@ -451,6 +452,14 @@ void ParseMacroDefinition(struct ParseState *Parser)
         ProgramFail(Parser, "'%s' is already defined", MacroNameStr);
 }
 
+/* parse a pragma */
+void ParsePragma(struct ParseState *Parser)
+{
+    /* consume tokens until we hit the end of a line */
+    /* (not ideal for _Pragma() but it'll do for now) */
+    LexToEndOfMacro(Parser);
+}
+
 /* copy the entire parser state */
 void ParserCopy(struct ParseState *To, struct ParseState *From)
 {
@@ -853,6 +862,11 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
             }
             break;
         }
+    case TokenHashPragma:
+    case TokenUnderscorePragma:
+        ParsePragma(Parser);
+        CheckTrailingSemicolon = false;
+        break;
     default:
         *Parser = PreState;
         return ParseResultError;

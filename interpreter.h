@@ -175,7 +175,9 @@ enum LexToken {
                TokenEndOfLine,
                TokenEndOfFunction,
                TokenBackSlash,
-               TokenVolatileType
+               TokenVolatileType,
+               TokenHashPragma,
+               TokenUnderscorePragma
 };
 
 /* used in dynamic memory allocation */

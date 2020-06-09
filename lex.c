@@ -94,7 +94,9 @@ static struct ReservedWord ReservedWords[] = {
     {"unsigned", TokenUnsignedType},
     {"void", TokenVoidType},
     {"while", TokenWhile},
-    {"volatile", TokenVolatileType}
+    {"volatile", TokenVolatileType},
+    {"#pragma", TokenHashPragma},
+    {"_Pragma", TokenUnderscorePragma}
 };
 
 
@@ -849,7 +851,7 @@ enum LexToken LexGetRawToken(struct ParseState *Parser, struct Value **Value,
 #ifdef DEBUG_LEXER
     printf("Got token=%02x inc=%d pos=%d\n", Token, IncPos, Parser->CharacterPos);
 #endif
-    assert(Token >= TokenNone && Token <= TokenVolatileType);
+    assert(Token >= TokenNone && Token <= TokenUnderscorePragma);
     return Token;
 }
 
