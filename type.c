@@ -405,9 +405,10 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
     Picoc *pc = Parser->pc;
     *Typ = NULL;
 
-    /* ignore leading type qualifiers */
     ParserCopy(&Before, Parser);
     Token = LexGetToken(Parser, &LexerValue, true);
+
+    /* handle any leading type qualifiers/storage classes */
     while (Token == TokenStaticType || Token == TokenAutoType ||
             Token == TokenRegisterType || Token == TokenExternType ||
             Token == TokenVolatileType) {
@@ -417,6 +418,20 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
             VolatileQualifier = true;
 
         Token = LexGetToken(Parser, &LexerValue, true);
+    }
+
+    /* handle any trailing type qualifiers/storage classes */
+    enum LexToken FollowToken = LexGetToken(Parser, &LexerValue, false);
+    while (FollowToken == TokenStaticType || FollowToken == TokenAutoType ||
+            FollowToken == TokenRegisterType || FollowToken == TokenExternType ||
+            FollowToken == TokenVolatileType) {
+        if (FollowToken == TokenStaticType)
+            StaticQualifier = true;
+        else if (FollowToken == TokenVolatileType)
+            VolatileQualifier = true;
+
+        LexGetToken(Parser, &LexerValue, true);
+        FollowToken = LexGetToken(Parser, &LexerValue, false);
     }
 
     if (IsStatic != NULL)
