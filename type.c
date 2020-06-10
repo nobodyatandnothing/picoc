@@ -457,6 +457,14 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
         Token = LexGetToken(Parser, &LexerValue, true);
     }
 
+    /* handle long with trailing int by consuming and ignoring the int */
+    if (Token == TokenLongType) {
+        enum LexToken FollowToken = LexGetToken(Parser, &LexerValue, false);
+        if (FollowToken == TokenIntType) {
+            LexGetToken(Parser, &LexerValue, true);
+        }
+    }
+
     switch (Token) {
     case TokenIntType:
         *Typ = Unsigned ? &pc->UnsignedIntType : &pc->IntType;
