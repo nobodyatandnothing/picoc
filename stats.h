@@ -8,7 +8,7 @@
 #include "interpreter.h"
 
 #define NO_RUN_MODES 7
-#define NO_TOKENS 100
+#define NO_TOKENS 101
 
 extern const char *RunModeNames[NO_RUN_MODES];
 

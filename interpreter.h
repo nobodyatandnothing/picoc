@@ -177,7 +177,8 @@ enum LexToken {
                TokenBackSlash,
                TokenVolatileType,
                TokenHashPragma,
-               TokenUnderscorePragma
+               TokenUnderscorePragma,
+               TokenConstType
 };
 
 /* used in dynamic memory allocation */

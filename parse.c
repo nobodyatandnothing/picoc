@@ -748,6 +748,7 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
     case TokenRegisterType:
     case TokenExternType:
     case TokenVolatileType:
+    case TokenConstType:
         *Parser = PreState;
         CheckTrailingSemicolon = ParseDeclaration(Parser, Token);
         break;

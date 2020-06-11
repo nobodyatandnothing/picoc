@@ -114,7 +114,8 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenBackSlash", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenVolatileType", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenHashPragma", {0, 0, 0, 0, 0, 0, 0}},
-        {"TokenUnderscorePragma", {0, 0, 0, 0, 0, 0, 0}}
+        {"TokenUnderscorePragma", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenConstType", {0, 0, 0, 0, 0, 0, 0}}
 };
 
 
