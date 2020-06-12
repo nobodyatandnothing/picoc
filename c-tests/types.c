@@ -14,6 +14,9 @@ int volatile static j;
 const int x;
 long const y;
 
+typedef int MyInt;
+MyInt z = 1;
+
 int main(void) {
 	return 0;
 }

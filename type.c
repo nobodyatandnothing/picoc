@@ -421,7 +421,7 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
     }
 
     /* handle any trailing type qualifiers/storage classes */
-    enum LexToken FollowToken = LexGetToken(Parser, &LexerValue, false);
+    enum LexToken FollowToken = LexGetToken(Parser, NULL, false);
     while (FollowToken == TokenStaticType || FollowToken == TokenAutoType ||
             FollowToken == TokenRegisterType || FollowToken == TokenExternType ||
             FollowToken == TokenVolatileType || FollowToken == TokenConstType) {
@@ -430,8 +430,8 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
         else if (FollowToken == TokenVolatileType)
             VolatileQualifier = true;
 
-        LexGetToken(Parser, &LexerValue, true);
-        FollowToken = LexGetToken(Parser, &LexerValue, false);
+        LexGetToken(Parser, NULL, true);
+        FollowToken = LexGetToken(Parser, NULL, false);
     }
 
     if (IsStatic != NULL)
@@ -441,7 +441,7 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
 
     /* handle signed/unsigned with no trailing type */
     if (Token == TokenSignedType || Token == TokenUnsignedType) {
-        enum LexToken FollowToken = LexGetToken(Parser, &LexerValue, false);
+        enum LexToken FollowToken = LexGetToken(Parser, NULL, false);
         Unsigned = (Token == TokenUnsignedType);
 
         if (FollowToken != TokenIntType && FollowToken != TokenLongType &&
@@ -459,9 +459,9 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
 
     /* handle long with trailing int by consuming and ignoring the int */
     if (Token == TokenLongType) {
-        enum LexToken FollowToken = LexGetToken(Parser, &LexerValue, false);
+        enum LexToken FollowToken = LexGetToken(Parser, NULL, false);
         if (FollowToken == TokenIntType) {
-            LexGetToken(Parser, &LexerValue, true);
+            LexGetToken(Parser, NULL, true);
         }
     }
 
