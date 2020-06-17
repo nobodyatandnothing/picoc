@@ -46,7 +46,7 @@ void LibraryAdd(Picoc *pc, struct LibraryFunction *FuncList)
             strlen((char*)FuncList[Count].Prototype), NULL);
         LexInitParser(&Parser, pc, FuncList[Count].Prototype, Tokens,
             IntrinsicName, true, false);
-        TypeParse(&Parser, &ReturnType, &Identifier, NULL, NULL);
+        TypeParse(&Parser, &ReturnType, &Identifier, NULL, NULL, NULL);
         NewValue = ParseFunctionDefinition(&Parser, ReturnType, Identifier);
         NewValue->Val->FuncDef.Intrinsic = FuncList[Count].Func;
         HeapFreeMem(pc, Tokens);
