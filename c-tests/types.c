@@ -8,8 +8,13 @@ long int e;
 unsigned long f;
 unsigned long int g;
 
-volatile int i;
-int volatile static j;
+short h;
+short int i;
+unsigned short j;
+unsigned short int k;
+
+volatile int l;
+int volatile static m;
 
 const int x;
 long const y;
