@@ -1,10 +1,10 @@
 int main(void)
 {
-	int j = 0;
+	int j = 999;
 
 	for (int i = 0; i < 4; i++) {
-		j = i + 2;
+		j = i - 3;
 	}
 
-	return 0;
+	return j;
 }

@@ -49,11 +49,11 @@ enum ParseResult ParseStatementMaybeRun(struct ParseState *Parser,
         enum RunMode OldMode = Parser->Mode;
         int Result;
         Parser->Mode = RunModeSkip;
-        Result = ParseStatement(Parser, CheckTrailingSemicolon);
+        Result = ParseStatement(Parser, CheckTrailingSemicolon, false);
         Parser->Mode = OldMode;
         return (enum ParseResult)Result;
     } else
-        return ParseStatement(Parser, CheckTrailingSemicolon);
+        return ParseStatement(Parser, CheckTrailingSemicolon, false);
 }
 
 /* count the number of parameters to a function or macro */
@@ -496,11 +496,11 @@ void ParseFor(struct ParseState *Parser)
         ProgramFail(Parser, "'(' expected");
 
     if (LexGetToken(Parser, NULL, false) != TokenSemicolon) {
-        if (ParseStatement(Parser, false) != ParseResultOk)
+        if (ParseStatement(Parser, false, true) != ParseResultOk)
             ProgramFail(Parser, "statement expected");
         while (LexGetToken(Parser, NULL, false) == TokenComma) {
             LexGetToken(Parser, NULL, true);
-            if (ParseStatement(Parser, false) != ParseResultOk)
+            if (ParseStatement(Parser, false, true) != ParseResultOk)
                 ProgramFail(Parser, "statement expected");
         }
     }
@@ -538,10 +538,10 @@ void ParseFor(struct ParseState *Parser)
 
     while (Condition && Parser->Mode == RunModeRun) {
         ParserCopyPos(Parser, &PreIncrement);
-        ParseStatement(Parser, false);
+        ParseStatement(Parser, false, false);
         while (LexGetToken(Parser, NULL, false) == TokenComma) {
             LexGetToken(Parser, NULL, true);
-            ParseStatement(Parser, false);
+            ParseStatement(Parser, false, false);
         }
 
         ParserCopyPos(Parser, &PreConditional);
@@ -552,7 +552,7 @@ void ParseFor(struct ParseState *Parser)
 
         if (Condition) {
             ParserCopyPos(Parser, &PreStatement);
-            ParseStatement(Parser, true);
+            ParseStatement(Parser, true, false);
 
             if (Parser->Mode == RunModeContinue)
                 Parser->Mode = RunModeRun;
@@ -581,12 +581,12 @@ enum RunMode ParseBlock(struct ParseState *Parser, int AbsorbOpenBrace,
         /* condition failed - skip this block instead */
         enum RunMode OldMode = Parser->Mode;
         Parser->Mode = RunModeSkip;
-        while (ParseStatement(Parser, true) == ParseResultOk) {
+        while (ParseStatement(Parser, true, false) == ParseResultOk) {
         }
         Parser->Mode = OldMode;
     } else {
         /* just run it in its current mode */
-        while (ParseStatement(Parser, true) == ParseResultOk) {
+        while (ParseStatement(Parser, true, false) == ParseResultOk) {
         }
     }
 
@@ -618,7 +618,7 @@ void ParseTypedef(struct ParseState *Parser)
 
 /* parse a statement */
 enum ParseResult ParseStatement(struct ParseState *Parser,
-    int CheckTrailingSemicolon)
+    int CheckTrailingSemicolon, int DoNotConsumeTrailingSemicolon)
 {
     int Condition;
     enum LexToken Token;
@@ -728,7 +728,7 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
             ParserCopyPos(&PreStatement, Parser);
             do {
                 ParserCopyPos(Parser, &PreStatement);
-                if (ParseStatement(Parser, true) != ParseResultOk)
+                if (ParseStatement(Parser, true, false) != ParseResultOk)
                     ProgramFail(Parser, "statement expected");
                 if (Parser->Mode == RunModeContinue)
                     Parser->Mode = PreMode;
@@ -894,7 +894,7 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
     }
 
     if (CheckTrailingSemicolon) {
-        if (LexGetToken(Parser, NULL, true) != TokenSemicolon)
+        if (LexGetToken(Parser, NULL, !DoNotConsumeTrailingSemicolon) != TokenSemicolon)
             ProgramFail(Parser, "';' expected");
     }
 
@@ -934,7 +934,7 @@ void PicocParse(Picoc *pc, const char *FileName, const char *Source,
         EnableDebugger);
 
     do {
-        Ok = ParseStatement(&Parser, true);
+        Ok = ParseStatement(&Parser, true, false);
     } while (Ok == ParseResultOk);
 
     if (Ok == ParseResultError)
@@ -957,7 +957,7 @@ void PicocParseInteractiveNoStartPrompt(Picoc *pc, int EnableDebugger)
 
     do {
         LexInteractiveStatementPrompt(pc);
-        Ok = ParseStatement(&Parser, true);
+        Ok = ParseStatement(&Parser, true, false);
         LexInteractiveCompleted(pc, &Parser);
 
     } while (Ok == ParseResultOk);
