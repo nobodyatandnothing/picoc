@@ -495,8 +495,18 @@ void ParseFor(struct ParseState *Parser)
     if (LexGetToken(Parser, NULL, true) != TokenOpenBracket)
         ProgramFail(Parser, "'(' expected");
 
-    if (ParseStatement(Parser, true) != ParseResultOk)
-        ProgramFail(Parser, "statement expected");
+    if (LexGetToken(Parser, NULL, false) != TokenSemicolon) {
+        if (ParseStatement(Parser, false) != ParseResultOk)
+            ProgramFail(Parser, "statement expected");
+        while (LexGetToken(Parser, NULL, false) == TokenComma) {
+            LexGetToken(Parser, NULL, true);
+            if (ParseStatement(Parser, false) != ParseResultOk)
+                ProgramFail(Parser, "statement expected");
+        }
+    }
+
+    if (LexGetToken(Parser, NULL, true) != TokenSemicolon)
+        ProgramFail(Parser, "';' expected");
 
     ParserCopyPos(&PreConditional, Parser);
     if (LexGetToken(Parser, NULL, false) == TokenSemicolon)
