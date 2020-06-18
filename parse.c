@@ -509,6 +509,10 @@ void ParseFor(struct ParseState *Parser)
 
     ParserCopyPos(&PreIncrement, Parser);
     ParseStatementMaybeRun(Parser, false, false);
+    while (LexGetToken(Parser, NULL, false) == TokenComma) {
+        LexGetToken(Parser, NULL, true);
+        ParseStatementMaybeRun(Parser, false, false);
+    }
 
     if (LexGetToken(Parser, NULL, true) != TokenCloseBracket)
         ProgramFail(Parser, "')' expected");
@@ -525,6 +529,10 @@ void ParseFor(struct ParseState *Parser)
     while (Condition && Parser->Mode == RunModeRun) {
         ParserCopyPos(Parser, &PreIncrement);
         ParseStatement(Parser, false);
+        while (LexGetToken(Parser, NULL, false) == TokenComma) {
+            LexGetToken(Parser, NULL, true);
+            ParseStatement(Parser, false);
+        }
 
         ParserCopyPos(Parser, &PreConditional);
         if (LexGetToken(Parser, NULL, false) == TokenSemicolon)
