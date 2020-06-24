@@ -17,7 +17,7 @@
 #include "LICENSE.h"
 
 /* Override via STACKSIZE environment variable */
-#define PICOC_STACK_SIZE (128000*4)
+#define PICOC_STACK_SIZE (32*1024*1024)
 
 int main(int argc, char **argv)
 {
