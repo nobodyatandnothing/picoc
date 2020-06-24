@@ -120,14 +120,20 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
 
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser) {
-    fprintf(stderr, "Parsing Statement %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token, RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
-    LexTokenStats[token].count[parser->Mode]++;
+    if (parser->pc->CollectStats) {
+        fprintf(stderr, "Parsing Statement %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
+                RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
+        LexTokenStats[token].count[parser->Mode]++;
+    }
 }
 
 
 void stats_log_expression(enum LexToken token, struct ParseState *parser) {
-    fprintf(stderr, "Parsing Expression %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token, RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
-    LexTokenStats[token].count[parser->Mode]++;
+    if (parser->pc->CollectStats) {
+        fprintf(stderr, "Parsing Expression %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
+                RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
+        LexTokenStats[token].count[parser->Mode]++;
+    }
 }
 
 

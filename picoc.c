@@ -23,17 +23,20 @@ int main(int argc, char **argv)
 {
     int ParamCount = 1;
     int DontRunMain = false;
+    int CollectStats = false;
+    int StatsType = 0;
     int StackSize = getenv("STACKSIZE") ? atoi(getenv("STACKSIZE")) : PICOC_STACK_SIZE;
     Picoc pc;
 
     if (argc < 2 || strcmp(argv[ParamCount], "-h") == 0) {
         printf(PICOC_VERSION "  \n"
                "Format:\n\n"
-               "> picoc <file1.c>... [- <arg1>...]    : run a program, calls main() as the entry point\n"
-               "> picoc -s <file1.c>... [- <arg1>...] : run a script, runs the program without calling main()\n"
-               "> picoc -i                            : interactive mode, Ctrl+d to exit\n"
-               "> picoc -c                            : copyright info\n"
-               "> picoc -h                            : this help message\n");
+               "> picoc <file1.c>... [- <arg1>...]          : run a program, calls main() as the entry point\n"
+               "> picoc -s <file1.c>... [- <arg1>...]       : run a script, runs the program without calling main()\n"
+               "> picoc -d[type] <file1.c>... [- <arg1>...] : run a program, outputting debugging stats\n"
+               "> picoc -i                                  : interactive mode, Ctrl+d to exit\n"
+               "> picoc -c                                  : copyright info\n"
+               "> picoc -h                                  : this help message\n");
         return 0;
     }
 
@@ -47,6 +50,13 @@ int main(int argc, char **argv)
     if (strcmp(argv[ParamCount], "-s") == 0) {
         DontRunMain = true;
         PicocIncludeAllSystemHeaders(&pc);
+        ParamCount++;
+    } else if (strncmp(argv[ParamCount], "-d", 2) == 0) {
+        if (strlen(argv[ParamCount]) > 2) {
+            StatsType = atoi(&argv[ParamCount][2]);
+        }
+        CollectStats = true;
+        pc.CollectStats = true;
         ParamCount++;
     }
 
@@ -68,7 +78,9 @@ int main(int argc, char **argv)
 
     PicocCleanup(&pc);
 
-    stats_print_tokens(0);
+    if (CollectStats) {
+        stats_print_tokens(StatsType == 1);
+    }
 
     return pc.PicocExitValue;
 }
