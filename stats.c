@@ -118,36 +118,98 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenConstType", {0, 0, 0, 0, 0, 0, 0}}
 };
 
+unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};
 
-void stats_log_statement(enum LexToken token, struct ParseState *parser) {
+
+void stats_log_statement(enum LexToken token, struct ParseState *parser)
+{
     if (parser->pc->CollectStats) {
-        fprintf(stderr, "Parsing Statement %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
-                RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Parsing Statement %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
+                    RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
+        }
         LexTokenStats[token].count[parser->Mode]++;
     }
 }
 
 
-void stats_log_expression(enum LexToken token, struct ParseState *parser) {
+void stats_log_expression(enum LexToken token, struct ParseState *parser)
+{
     if (parser->pc->CollectStats) {
-        fprintf(stderr, "Parsing Expression %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
-                RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Parsing Expression %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
+                    RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
+        }
         LexTokenStats[token].count[parser->Mode]++;
     }
 }
 
 
-void stats_print_tokens(int all) {
-    fprintf(stderr, "\n*********\nToken stats:\n");
+void stats_log_function(int parameterCount, struct ParseState *parser) {
+    if (parser->pc->CollectStats) {
+        FunctionParameterCounts[parameterCount]++;
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Parsing function with %d parameters\n", parameterCount);
+        }
+    }
+}
+
+
+void stats_print_tokens(int all)
+{
+    printf("\n*********\nToken stats:\n");
     for (int i = 0; i < NO_RUN_MODES; i++) {
-        fprintf(stderr, "***\n");
-        fprintf(stderr, "%s\n", RunModeNames[i]);
+        printf("***\n");
+        printf("%s\n", RunModeNames[i]);
         for (int j = 0; j < NO_TOKENS; j++) {
             if (all || LexTokenStats[j].count[i] > 0) {
-                fprintf(stderr, "%5d %s\n", LexTokenStats[j].count[i],
-                        LexTokenStats[j].name);
+                printf("%5d %s\n", LexTokenStats[j].count[i], LexTokenStats[j].name);
             }
         }
     }
-    fprintf(stderr, "*********\n");
+    printf("*********\n");
+}
+
+void stats_print_tokens_csv()
+{
+    printf("RunMode");
+    for (int j = 0; j < NO_TOKENS; j++) {
+        printf(",%s", LexTokenStats[j].name);
+    }
+    for (int i = 0; i < NO_RUN_MODES; i++) {
+        printf("\n%s", RunModeNames[i]);
+        for (int j = 0; j < NO_TOKENS; j++) {
+            printf(",%d", LexTokenStats[j].count[i]);
+        }
+    }
+    printf("\n");
+}
+
+void stats_print_tokens_csv_runmode(enum RunMode runMode)
+{
+    for (int i = 0; i < NO_TOKENS - 1; i++) {
+        printf("%d,", LexTokenStats[i].count[runMode]);
+    }
+    printf("%d\n", LexTokenStats[NO_TOKENS - 1].count[runMode]);
+}
+
+void stats_print_runmode_list(void) {
+    for (int i = 0; i < NO_RUN_MODES - 1; i++) {
+        printf("%s,", RunModeNames[i]);
+    }
+    printf("%s\n", RunModeNames[NO_RUN_MODES - 1]);
+}
+
+void stats_print_token_list(void) {
+    for (int i = 0; i < NO_TOKENS - 1; i++) {
+        printf("%s,", LexTokenStats[i].name);
+    }
+    printf("%s\n", LexTokenStats[NO_TOKENS - 1].name);
+}
+
+void stats_print_function_parameter_counts(void) {
+    for (int i = 0; i < PARAMETER_MAX; i++) {
+        printf("%u,", FunctionParameterCounts[i]);
+    }
+    printf("%u\n", FunctionParameterCounts[PARAMETER_MAX]);
 }

@@ -179,6 +179,8 @@ struct Value *ParseFunctionDefinition(struct ParseState *Parser,
             } else
                 ProgramFail(Parser, "'%s' is already defined", Identifier);
         }
+
+        stats_log_function(FuncValue->Val->FuncDef.NumParams, Parser);
     }
 
     if (!TableSet(pc, &pc->GlobalTable, Identifier, FuncValue,

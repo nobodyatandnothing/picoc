@@ -34,6 +34,8 @@ int main(int argc, char **argv)
                "> picoc <file1.c>... [- <arg1>...]          : run a program, calls main() as the entry point\n"
                "> picoc -s <file1.c>... [- <arg1>...]       : run a script, runs the program without calling main()\n"
                "> picoc -d[type] <file1.c>... [- <arg1>...] : run a program, outputting debugging stats\n"
+               "> picoc -r                                  : output list of run modes, then quit\n"
+               "> picoc -t                                  : output list of tokens, then quit\n"
                "> picoc -i                                  : interactive mode, Ctrl+d to exit\n"
                "> picoc -c                                  : copyright info\n"
                "> picoc -h                                  : this help message\n");
@@ -51,12 +53,24 @@ int main(int argc, char **argv)
         DontRunMain = true;
         PicocIncludeAllSystemHeaders(&pc);
         ParamCount++;
+    } else if (strncmp(argv[ParamCount], "-r", 2) == 0) {
+        stats_print_runmode_list();
+        return 0;
+    } else if (strncmp(argv[ParamCount], "-t", 2) == 0) {
+        stats_print_token_list();
+        return 0;
     } else if (strncmp(argv[ParamCount], "-d", 2) == 0) {
         if (strlen(argv[ParamCount]) > 2) {
             StatsType = atoi(&argv[ParamCount][2]);
         }
         CollectStats = true;
         pc.CollectStats = true;
+        if (StatsType > 9) {
+            pc.PrintStats = true;
+            StatsType -= 10;
+        } else {
+            pc.PrintStats = false;
+        }
         ParamCount++;
     }
 
@@ -78,8 +92,36 @@ int main(int argc, char **argv)
 
     PicocCleanup(&pc);
 
+    /* Stats types:
+     * 0: Print tokens that have been seen for each run mode
+     * 1: Print all tokens for each run mode
+     * 2: Print all tokens for each run mode in CSV format (multiple rows, with header row)
+     * 3: Print all tokens for RunModeRun only in CSV format (one row, no header row)
+     * 4: Print CSV list of function parameter counts
+     *
+     * Add 10 to each type to also print token information to stderr in real-time as they are parsed.
+     */
+
     if (CollectStats) {
-        stats_print_tokens(StatsType == 1);
+        switch (StatsType) {
+            case 0:
+                stats_print_tokens(false);
+                break;
+            case 1:
+                stats_print_tokens(true);
+                break;
+            case 2:
+                stats_print_tokens_csv();
+                break;
+            case 3:
+                stats_print_tokens_csv_runmode(RunModeRun);
+                break;
+            case 4:
+                stats_print_function_parameter_counts();
+                break;
+            default:
+                break;
+        }
     }
 
     return pc.PicocExitValue;

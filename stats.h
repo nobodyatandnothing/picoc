@@ -21,6 +21,12 @@ extern struct LexTokenStat LexTokenStats[NO_TOKENS];
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser);
 void stats_log_expression(enum LexToken token, struct ParseState *parser);
+void stats_log_function(int parameterCount, struct ParseState *parser);
 void stats_print_tokens(int all);
+void stats_print_tokens_csv(void);
+void stats_print_tokens_csv_runmode(enum RunMode runMode);
+void stats_print_runmode_list(void);
+void stats_print_token_list(void);
+void stats_print_function_parameter_counts(void);
 
 #endif //PICOC_STATS_H
