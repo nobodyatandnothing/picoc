@@ -4,6 +4,14 @@
 
 #include "stats.h"
 
+#define NO_RUN_MODES 7
+#define NO_TOKENS 101
+
+struct LexTokenStat {
+    const char* name;
+    int count[NO_RUN_MODES];
+};
+
 const char *RunModeNames[NO_RUN_MODES] = {
         "RunModeRun",
         "RunModeSkip",
@@ -119,6 +127,8 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
 };
 
 unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};
+unsigned int FunctionCallDepth = 0;
+unsigned int FunctionCallWatermark = 0;
 
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser)
@@ -145,11 +155,37 @@ void stats_log_expression(enum LexToken token, struct ParseState *parser)
 }
 
 
-void stats_log_function(int parameterCount, struct ParseState *parser) {
+void stats_log_function_definition(int parameterCount, struct ParseState *parser)
+{
     if (parser->pc->CollectStats) {
         FunctionParameterCounts[parameterCount]++;
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Parsing function with %d parameters\n", parameterCount);
+            fprintf(stderr, "Parsing function definition with %d parameters\n", parameterCount);
+        }
+    }
+}
+
+
+void stats_log_function_entry(struct ParseState *parser)
+{
+    if (parser->pc->CollectStats) {
+        FunctionCallDepth++;
+        if (FunctionCallDepth > FunctionCallWatermark) {
+            FunctionCallWatermark = FunctionCallDepth;
+        }
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Entering function (current call depth %u/%u)\n", FunctionCallDepth, FunctionCallWatermark);
+        }
+    }
+}
+
+
+void stats_log_function_exit(struct ParseState *parser)
+{
+    if (parser->pc->CollectStats) {
+        FunctionCallDepth--;
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Leaving function (current call depth %u/%u)\n", FunctionCallDepth, FunctionCallWatermark);
         }
     }
 }
@@ -170,6 +206,7 @@ void stats_print_tokens(int all)
     printf("*********\n");
 }
 
+
 void stats_print_tokens_csv()
 {
     printf("RunMode");
@@ -185,6 +222,7 @@ void stats_print_tokens_csv()
     printf("\n");
 }
 
+
 void stats_print_tokens_csv_runmode(enum RunMode runMode)
 {
     for (int i = 0; i < NO_TOKENS - 1; i++) {
@@ -193,23 +231,34 @@ void stats_print_tokens_csv_runmode(enum RunMode runMode)
     printf("%d\n", LexTokenStats[NO_TOKENS - 1].count[runMode]);
 }
 
-void stats_print_runmode_list(void) {
+
+void stats_print_runmode_list(void)
+{
     for (int i = 0; i < NO_RUN_MODES - 1; i++) {
         printf("%s,", RunModeNames[i]);
     }
     printf("%s\n", RunModeNames[NO_RUN_MODES - 1]);
 }
 
-void stats_print_token_list(void) {
+
+void stats_print_token_list(void)
+{
     for (int i = 0; i < NO_TOKENS - 1; i++) {
         printf("%s,", LexTokenStats[i].name);
     }
     printf("%s\n", LexTokenStats[NO_TOKENS - 1].name);
 }
 
-void stats_print_function_parameter_counts(void) {
+
+void stats_print_function_parameter_counts(void)
+{
     for (int i = 0; i < PARAMETER_MAX; i++) {
         printf("%u,", FunctionParameterCounts[i]);
     }
     printf("%u\n", FunctionParameterCounts[PARAMETER_MAX]);
+}
+
+void stats_print_function_call_watermark(void)
+{
+    printf("%u\n", FunctionCallWatermark);
 }

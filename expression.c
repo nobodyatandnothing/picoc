@@ -1862,6 +1862,8 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
 
     if (RunIt) {
         /* run the function */
+        stats_log_function_entry(Parser);
+
         if (ArgCount < FuncValue->Val->FuncDef.NumParams)
             ProgramFail(Parser, "not enough arguments to '%s'", FuncName);
 
@@ -1915,6 +1917,8 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
         }
 
         HeapPopStackFrame(Parser->pc);
+
+        stats_log_function_exit(Parser);
     }
 
     Parser->Mode = OldMode;
