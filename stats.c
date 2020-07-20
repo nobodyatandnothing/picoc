@@ -127,8 +127,13 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
 };
 
 unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};
+unsigned int FunctionParameterDynamicCounts[PARAMETER_MAX + 1] = {0};
 unsigned int FunctionCallDepth = 0;
 unsigned int FunctionCallWatermark = 0;
+unsigned int LoopDepth = 0;
+unsigned int LoopWatermark = 0;
+unsigned int ConditionalDepth = 0;
+unsigned int ConditionalWatermark = 0;
 
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser)
@@ -166,9 +171,10 @@ void stats_log_function_definition(int parameterCount, struct ParseState *parser
 }
 
 
-void stats_log_function_entry(struct ParseState *parser)
+void stats_log_function_entry(struct ParseState *parser, int argCount)
 {
     if (parser->pc->CollectStats) {
+        FunctionParameterDynamicCounts[argCount]++;
         FunctionCallDepth++;
         if (FunctionCallDepth > FunctionCallWatermark) {
             FunctionCallWatermark = FunctionCallDepth;
@@ -189,6 +195,57 @@ void stats_log_function_exit(struct ParseState *parser)
         }
     }
 }
+
+
+void stats_log_loop_entry(struct ParseState *parser)
+{
+    if (parser->pc->CollectStats) {
+        LoopDepth++;
+        if (LoopDepth > LoopWatermark) {
+            LoopWatermark = LoopDepth;
+        }
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Entering loop (current nesting depth %u/%u)\n", LoopDepth, LoopWatermark);
+        }
+    }
+}
+
+
+void stats_log_loop_exit(struct ParseState *parser)
+{
+    if (parser->pc->CollectStats) {
+        LoopDepth--;
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Leaving loop (current nesting depth %u/%u)\n", LoopDepth, LoopWatermark);
+        }
+    }
+}
+
+
+void stats_log_conditional_entry(struct ParseState *parser, int condition)
+{
+    if (parser->pc->CollectStats && condition) {
+        ConditionalDepth++;
+        if (ConditionalDepth > ConditionalWatermark) {
+            ConditionalWatermark = ConditionalDepth;
+        }
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Entering conditional (current nesting depth %u/%u)\n", ConditionalDepth, ConditionalWatermark);
+        }
+    }
+}
+
+
+void stats_log_conditional_exit(struct ParseState *parser, int condition)
+{
+    if (parser->pc->CollectStats && condition) {
+        ConditionalDepth--;
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Leaving conditional (current nesting depth %u/%u)\n", ConditionalDepth, ConditionalWatermark);
+        }
+    }
+}
+
 
 
 void stats_print_tokens(int all)
@@ -250,15 +307,21 @@ void stats_print_token_list(void)
 }
 
 
-void stats_print_function_parameter_counts(void)
+void stats_print_function_parameter_counts(bool dynamic)
 {
     for (int i = 0; i < PARAMETER_MAX; i++) {
-        printf("%u,", FunctionParameterCounts[i]);
+        if (dynamic)
+            printf("%u,", FunctionParameterDynamicCounts[i]);
+        else
+            printf("%u,", FunctionParameterCounts[i]);
     }
-    printf("%u\n", FunctionParameterCounts[PARAMETER_MAX]);
+    if (dynamic)
+        printf("%u\n", FunctionParameterDynamicCounts[PARAMETER_MAX]);
+    else
+        printf("%u\n", FunctionParameterCounts[PARAMETER_MAX]);
 }
 
-void stats_print_function_call_watermark(void)
+void stats_print_watermarks(void)
 {
-    printf("%u\n", FunctionCallWatermark);
+    printf("%u,%u,%u\n", FunctionCallWatermark, LoopWatermark, ConditionalWatermark);
 }

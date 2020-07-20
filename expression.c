@@ -1862,7 +1862,7 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
 
     if (RunIt) {
         /* run the function */
-        stats_log_function_entry(Parser);
+        stats_log_function_entry(Parser, ArgCount);
 
         if (ArgCount < FuncValue->Val->FuncDef.NumParams)
             ProgramFail(Parser, "not enough arguments to '%s'", FuncName);

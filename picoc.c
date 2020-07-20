@@ -98,7 +98,7 @@ int main(int argc, char **argv)
      * 2: Print all tokens for each run mode in CSV format (multiple rows, with header row)
      * 3: Print all tokens for RunModeRun only in CSV format (one row, no header row)
      * 4: Print CSV list of function definition parameter counts
-     * 5: Print maximum measured function call depth
+     * 5: Print maximum measured function call, loop and conditional statement depths
      *
      * Add 10 to each type to also print token information to stderr in real-time as they are parsed.
      */
@@ -118,10 +118,13 @@ int main(int argc, char **argv)
                 stats_print_tokens_csv_runmode(RunModeRun);
                 break;
             case 4:
-                stats_print_function_parameter_counts();
+                stats_print_function_parameter_counts(false);
                 break;
             case 5:
-                stats_print_function_call_watermark();
+                stats_print_function_parameter_counts(true);
+                break;
+            case 6:
+                stats_print_watermarks();
                 break;
             default:
                 break;

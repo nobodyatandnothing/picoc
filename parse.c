@@ -538,6 +538,8 @@ void ParseFor(struct ParseState *Parser)
 
     ParserCopyPos(&After, Parser);
 
+    stats_log_loop_entry(Parser);
+
     while (Condition && Parser->Mode == RunModeRun) {
         ParserCopyPos(Parser, &PreIncrement);
         ParseStatement(Parser, false, false);
@@ -567,6 +569,8 @@ void ParseFor(struct ParseState *Parser)
     VariableScopeEnd(Parser, ScopeID, PrevScopeID);
 
     ParserCopyPos(Parser, &After);
+
+    stats_log_loop_exit(Parser);
 }
 
 /* parse a block of code and return what mode it returned in */
@@ -692,12 +696,16 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
         Condition = ExpressionParseInt(Parser);
         if (LexGetToken(Parser, NULL, true) != TokenCloseBracket)
             ProgramFail(Parser, "')' expected");
+        stats_log_conditional_entry(Parser, Condition);
         if (ParseStatementMaybeRun(Parser, Condition, true) != ParseResultOk)
             ProgramFail(Parser, "statement expected");
+        stats_log_conditional_exit(Parser, Condition);
         if (LexGetToken(Parser, NULL, false) == TokenElse) {
             LexGetToken(Parser, NULL, true);
+            stats_log_conditional_entry(Parser, !Condition);
             if (ParseStatementMaybeRun(Parser, !Condition, true) != ParseResultOk)
                 ProgramFail(Parser, "statement expected");
+            stats_log_conditional_exit(Parser, !Condition);
         }
         CheckTrailingSemicolon = false;
         break;
