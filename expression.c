@@ -530,36 +530,45 @@ void ExpressionAssign(struct ParseState *Parser, struct Value *DestValue,
     switch (DestValue->Typ->Base) {
     case TypeInt:
         DestValue->Val->Integer = (int)ExpressionCoerceInteger(SourceValue);
+        stats_log_assignment(Parser, 0);
         break;
     case TypeShort:
         DestValue->Val->ShortInteger = (short)ExpressionCoerceInteger(SourceValue);
+        stats_log_assignment(Parser, 1);
         break;
     case TypeChar:
         DestValue->Val->Character = (char)ExpressionCoerceInteger(SourceValue);
+        stats_log_assignment(Parser, 2);
         break;
     case TypeLong:
         DestValue->Val->LongInteger = SourceValue->Val->LongInteger;
+        stats_log_assignment(Parser, 3);
         break;
     case TypeUnsignedInt:
         DestValue->Val->UnsignedInteger =
             (unsigned int)ExpressionCoerceUnsignedInteger(SourceValue);
+        stats_log_assignment(Parser, 4);
         break;
     case TypeUnsignedShort:
         DestValue->Val->UnsignedShortInteger =
             (unsigned short)ExpressionCoerceUnsignedInteger(SourceValue);
+        stats_log_assignment(Parser, 5);
         break;
     case TypeUnsignedLong:
         DestValue->Val->UnsignedLongInteger = SourceValue->Val->UnsignedLongInteger;
+        stats_log_assignment(Parser, 6);
         break;
     case TypeUnsignedChar:
         DestValue->Val->UnsignedCharacter =
             (unsigned char)ExpressionCoerceUnsignedInteger(SourceValue);
+        stats_log_assignment(Parser, 7);
         break;
     case TypeFP:
         if (!IS_NUMERIC_COERCIBLE_PLUS_POINTERS(SourceValue, AllowPointerCoercion))
             AssignFail(Parser, "%t from %t", DestValue->Typ, SourceValue->Typ,
                 0, 0, FuncName, ParamNo);
         DestValue->Val->FP = (double)ExpressionCoerceFP(SourceValue);
+        stats_log_assignment(Parser, 8);
         break;
     case TypePointer:
         ExpressionAssignToPointer(Parser, DestValue, SourceValue, FuncName,

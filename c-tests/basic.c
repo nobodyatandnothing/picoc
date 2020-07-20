@@ -1,4 +1,5 @@
-int a, b;
+int a = 0;
+int b;
 
 int main(void) {
 	a = 1 + 2;
