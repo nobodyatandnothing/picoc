@@ -183,7 +183,8 @@ void stats_log_function_definition(int parameterCount, struct ParseState *parser
     if (parser->pc->CollectStats) {
         FunctionParameterCounts[parameterCount]++;
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Parsing function definition with %d parameters\n", parameterCount);
+            fprintf(stderr, "Parsing function definition with %d parameters at %s:%d:%d\n",
+                    parameterCount, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -198,7 +199,8 @@ void stats_log_function_entry(struct ParseState *parser, int argCount)
             FunctionCallWatermark = FunctionCallDepth;
         }
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Entering function (current call depth %u/%u)\n", FunctionCallDepth, FunctionCallWatermark);
+            fprintf(stderr, "Entering function (current call depth %u, max %u) at %s:%d:%d\n",
+                    FunctionCallDepth, FunctionCallWatermark, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -209,7 +211,8 @@ void stats_log_function_exit(struct ParseState *parser)
     if (parser->pc->CollectStats) {
         FunctionCallDepth--;
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Leaving function (current call depth %u/%u)\n", FunctionCallDepth, FunctionCallWatermark);
+            fprintf(stderr, "Leaving function (current call depth %u, max %u) at %s:%d:%d\n",
+                    FunctionCallDepth, FunctionCallWatermark, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -223,7 +226,8 @@ void stats_log_loop_entry(struct ParseState *parser)
             LoopWatermark = LoopDepth;
         }
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Entering loop (current nesting depth %u/%u)\n", LoopDepth, LoopWatermark);
+            fprintf(stderr, "Entering loop (current nesting depth %u, max %u) at %s:%d:%d\n",
+                    LoopDepth, LoopWatermark, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -234,7 +238,8 @@ void stats_log_loop_exit(struct ParseState *parser)
     if (parser->pc->CollectStats) {
         LoopDepth--;
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Leaving loop (current nesting depth %u/%u)\n", LoopDepth, LoopWatermark);
+            fprintf(stderr, "Leaving loop (current nesting depth %u, max %u) at %s:%d:%d\n",
+                    LoopDepth, LoopWatermark, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -248,7 +253,8 @@ void stats_log_conditional_entry(struct ParseState *parser, int condition)
             ConditionalWatermark = ConditionalDepth;
         }
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Entering conditional (current nesting depth %u/%u)\n", ConditionalDepth, ConditionalWatermark);
+            fprintf(stderr, "Entering conditional (current nesting depth %u, max %u) at %s:%d:%d\n",
+                    ConditionalDepth, ConditionalWatermark, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -259,7 +265,8 @@ void stats_log_conditional_exit(struct ParseState *parser, int condition)
     if (parser->pc->CollectStats && condition) {
         ConditionalDepth--;
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Leaving conditional (current nesting depth %u/%u)\n", ConditionalDepth, ConditionalWatermark);
+            fprintf(stderr, "Leaving conditional (current nesting depth %u, max %u) at %s:%d:%d\n",
+                    ConditionalDepth, ConditionalWatermark, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
