@@ -335,27 +335,35 @@ long ExpressionAssignInt(struct ParseState *Parser, struct Value *DestValue,
     switch (DestValue->Typ->Base) {
     case TypeInt:
         DestValue->Val->Integer = (int)FromInt;
+        stats_log_assignment(Parser, 0);
         break;
     case TypeShort:
         DestValue->Val->ShortInteger = (short)FromInt;
+        stats_log_assignment(Parser, 1);
         break;
     case TypeChar:
         DestValue->Val->Character = (char)FromInt;
+        stats_log_assignment(Parser, 2);
         break;
     case TypeLong:
         DestValue->Val->LongInteger = (long)FromInt;
+        stats_log_assignment(Parser, 3);
         break;
     case TypeUnsignedInt:
         DestValue->Val->UnsignedInteger = (unsigned int)FromInt;
+        stats_log_assignment(Parser, 4);
         break;
     case TypeUnsignedShort:
         DestValue->Val->UnsignedShortInteger = (unsigned short)FromInt;
+        stats_log_assignment(Parser, 5);
         break;
     case TypeUnsignedLong:
         DestValue->Val->UnsignedLongInteger = (unsigned long)FromInt;
+        stats_log_assignment(Parser, 6);
         break;
     case TypeUnsignedChar:
         DestValue->Val->UnsignedCharacter = (unsigned char)FromInt;
+        stats_log_assignment(Parser, 7);
         break;
     default:
         break;
@@ -371,6 +379,7 @@ double ExpressionAssignFP(struct ParseState *Parser, struct Value *DestValue,
         ProgramFail(Parser, "can't assign to this");
 
     DestValue->Val->FP = FromFP;
+    stats_log_assignment(Parser, 8);
     return FromFP;
 }
 

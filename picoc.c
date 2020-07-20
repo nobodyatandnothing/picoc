@@ -36,6 +36,7 @@ int main(int argc, char **argv)
                "> picoc -d[type] <file1.c>... [- <arg1>...] : run a program, outputting debugging stats\n"
                "> picoc -r                                  : output list of run modes, then quit\n"
                "> picoc -t                                  : output list of tokens, then quit\n"
+               "> picoc -y                                  : output list of basic types, then quit\n"
                "> picoc -i                                  : interactive mode, Ctrl+d to exit\n"
                "> picoc -c                                  : copyright info\n"
                "> picoc -h                                  : this help message\n");
@@ -58,6 +59,9 @@ int main(int argc, char **argv)
         return 0;
     } else if (strncmp(argv[ParamCount], "-t", 2) == 0) {
         stats_print_token_list();
+        return 0;
+    } else if (strncmp(argv[ParamCount], "-y", 2) == 0) {
+        stats_print_types_list();
         return 0;
     } else if (strncmp(argv[ParamCount], "-d", 2) == 0) {
         if (strlen(argv[ParamCount]) > 2) {
@@ -98,7 +102,10 @@ int main(int argc, char **argv)
      * 2: Print all tokens for each run mode in CSV format (multiple rows, with header row)
      * 3: Print all tokens for RunModeRun only in CSV format (one row, no header row)
      * 4: Print CSV list of function definition parameter counts
-     * 5: Print maximum measured function call, loop and conditional statement depths
+     * 5: Print CSV list of runtime function call parameter counts
+     * 6: Print maximum measured function call, loop and conditional statement depths
+     * 7: Print number of assignments to each basic variable type
+     * 8: Print number of assignments to each basic variable type, in CSV format (one row, no header row)
      *
      * Add 10 to each type to also print token information to stderr in real-time as they are parsed.
      */
@@ -125,6 +132,12 @@ int main(int argc, char **argv)
                 break;
             case 6:
                 stats_print_watermarks();
+                break;
+            case 7:
+                stats_print_assignments();
+                break;
+            case 8:
+                stats_print_assignments_csv();
                 break;
             default:
                 break;

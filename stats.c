@@ -6,10 +6,16 @@
 
 #define NO_RUN_MODES 7
 #define NO_TOKENS 101
+#define NO_TYPES 9
 
 struct LexTokenStat {
     const char* name;
     int count[NO_RUN_MODES];
+};
+
+struct TypeStat {
+    const char* name;
+    int assignments;
 };
 
 const char *RunModeNames[NO_RUN_MODES] = {
@@ -124,6 +130,18 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenHashPragma", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenUnderscorePragma", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenConstType", {0, 0, 0, 0, 0, 0, 0}}
+};
+
+struct TypeStat TypeStats[NO_TYPES] = {
+        {"Int", 0},
+        {"Short", 0},
+        {"Char", 0},
+        {"Long", 0},
+        {"UnsignedInt", 0},
+        {"UnsignedShort", 0},
+        {"UnsignedChar", 0},
+        {"UnsignedLong", 0},
+        {"FP", 0}
 };
 
 unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};
@@ -247,6 +265,16 @@ void stats_log_conditional_exit(struct ParseState *parser, int condition)
 }
 
 
+void stats_log_assignment(struct ParseState *parser, int type) {
+    if (parser->pc->CollectStats && (strcmp(parser->FileName, "startup") != 0)) {
+        TypeStats[type].assignments++;
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Assignment of type %s at %s:%d:%d\n",
+                    TypeStats[type].name, parser->FileName, parser->Line, parser->CharacterPos);
+        }
+    }
+}
+
 
 void stats_print_tokens(int all)
 {
@@ -321,7 +349,34 @@ void stats_print_function_parameter_counts(bool dynamic)
         printf("%u\n", FunctionParameterCounts[PARAMETER_MAX]);
 }
 
+
 void stats_print_watermarks(void)
 {
     printf("%u,%u,%u\n", FunctionCallWatermark, LoopWatermark, ConditionalWatermark);
+}
+
+
+void stats_print_types_list(void)
+{
+    for (int i = 0; i < NO_TYPES - 1; i++) {
+        printf("%s,", TypeStats[i].name);
+    }
+    printf("%s\n", TypeStats[NO_TYPES - 1].name);
+}
+
+
+void stats_print_assignments(void)
+{
+    for (int i = 0; i < NO_TYPES; i++) {
+        printf("%s: %d\n", TypeStats[i].name, TypeStats[i].assignments);
+    }
+}
+
+
+void stats_print_assignments_csv(void)
+{
+    for (int i = 0; i < NO_TYPES - 1; i++) {
+        printf("%d,", TypeStats[i].assignments);
+    }
+    printf("%d\n", TypeStats[NO_TYPES - 1].assignments);
 }
