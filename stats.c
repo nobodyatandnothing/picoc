@@ -6,7 +6,7 @@
 
 #define NO_RUN_MODES 7
 #define NO_TOKENS 101
-#define NO_TYPES 9
+#define NO_TYPES 10
 
 struct LexTokenStat {
     const char* name;
@@ -133,15 +133,16 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
 };
 
 struct TypeStat TypeStats[NO_TYPES] = {
-        {"Int", 0},
-        {"Short", 0},
         {"Char", 0},
-        {"Long", 0},
-        {"UnsignedInt", 0},
-        {"UnsignedShort", 0},
         {"UnsignedChar", 0},
+        {"Short", 0},
+        {"UnsignedShort", 0},
+        {"Int", 0},
+        {"UnsignedInt", 0},
+        {"Long", 0},
         {"UnsignedLong", 0},
-        {"FP", 0}
+        {"FloatingPoint", 0},
+        {"Pointer", 0}
 };
 
 unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};

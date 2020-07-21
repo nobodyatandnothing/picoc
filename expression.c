@@ -335,35 +335,35 @@ long ExpressionAssignInt(struct ParseState *Parser, struct Value *DestValue,
     switch (DestValue->Typ->Base) {
     case TypeInt:
         DestValue->Val->Integer = (int)FromInt;
-        stats_log_assignment(Parser, 0);
+        stats_log_assignment(Parser, STATS_TYPE_Int);
         break;
     case TypeShort:
         DestValue->Val->ShortInteger = (short)FromInt;
-        stats_log_assignment(Parser, 1);
+        stats_log_assignment(Parser, STATS_TYPE_Short);
         break;
     case TypeChar:
         DestValue->Val->Character = (char)FromInt;
-        stats_log_assignment(Parser, 2);
+        stats_log_assignment(Parser, STATS_TYPE_Char);
         break;
     case TypeLong:
         DestValue->Val->LongInteger = (long)FromInt;
-        stats_log_assignment(Parser, 3);
+        stats_log_assignment(Parser, STATS_TYPE_Long);
         break;
     case TypeUnsignedInt:
         DestValue->Val->UnsignedInteger = (unsigned int)FromInt;
-        stats_log_assignment(Parser, 4);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedInt);
         break;
     case TypeUnsignedShort:
         DestValue->Val->UnsignedShortInteger = (unsigned short)FromInt;
-        stats_log_assignment(Parser, 5);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedShort);
         break;
     case TypeUnsignedLong:
         DestValue->Val->UnsignedLongInteger = (unsigned long)FromInt;
-        stats_log_assignment(Parser, 6);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedLong);
         break;
     case TypeUnsignedChar:
         DestValue->Val->UnsignedCharacter = (unsigned char)FromInt;
-        stats_log_assignment(Parser, 7);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedChar);
         break;
     default:
         break;
@@ -379,7 +379,7 @@ double ExpressionAssignFP(struct ParseState *Parser, struct Value *DestValue,
         ProgramFail(Parser, "can't assign to this");
 
     DestValue->Val->FP = FromFP;
-    stats_log_assignment(Parser, 8);
+    stats_log_assignment(Parser, STATS_TYPE_FP);
     return FromFP;
 }
 
@@ -484,13 +484,16 @@ void ExpressionAssignToPointer(struct ParseState *Parser, struct Value *ToValue,
     if (FromValue->Typ == ToValue->Typ ||
             FromValue->Typ == Parser->pc->VoidPtrType ||
             (ToValue->Typ == Parser->pc->VoidPtrType &&
-            FromValue->Typ->Base == TypePointer))
+            FromValue->Typ->Base == TypePointer)) {
         ToValue->Val->Pointer = FromValue->Val->Pointer; /* plain old pointer assignment */
+        stats_log_assignment(Parser, STATS_TYPE_Pointer);
+    }
     else if (FromValue->Typ->Base == TypeArray &&
             (PointedToType == FromValue->Typ->FromType ||
             ToValue->Typ == Parser->pc->VoidPtrType)) {
         /* the form is: blah *x = array of blah */
         ToValue->Val->Pointer = (void *)&FromValue->Val->ArrayMem[0];
+        stats_log_assignment(Parser, STATS_TYPE_Pointer);
     } else if (FromValue->Typ->Base == TypePointer &&
                 FromValue->Typ->FromType->Base == TypeArray &&
                (PointedToType == FromValue->Typ->FromType->FromType ||
@@ -498,17 +501,21 @@ void ExpressionAssignToPointer(struct ParseState *Parser, struct Value *ToValue,
         /* the form is: blah *x = pointer to array of blah */
         ToValue->Val->Pointer = VariableDereferencePointer(FromValue, NULL,
             NULL, NULL, NULL);
+        stats_log_assignment(Parser, STATS_TYPE_Pointer);
     } else if (IS_NUMERIC_COERCIBLE(FromValue) &&
             ExpressionCoerceInteger(FromValue) == 0) {
         /* null pointer assignment */
         ToValue->Val->Pointer = NULL;
+        stats_log_assignment(Parser, STATS_TYPE_Pointer);
     } else if (AllowPointerCoercion && IS_NUMERIC_COERCIBLE(FromValue)) {
         /* assign integer to native pointer */
         ToValue->Val->Pointer =
             (void*)(unsigned long)ExpressionCoerceUnsignedInteger(FromValue);
+        stats_log_assignment(Parser, STATS_TYPE_Pointer);
     } else if (AllowPointerCoercion && FromValue->Typ->Base == TypePointer) {
         /* assign a pointer to a pointer to a different type */
         ToValue->Val->Pointer = FromValue->Val->Pointer;
+        stats_log_assignment(Parser, STATS_TYPE_Pointer);
     } else
         AssignFail(Parser, "%t from %t", ToValue->Typ, FromValue->Typ, 0, 0,
             FuncName, ParamNo);
@@ -530,45 +537,45 @@ void ExpressionAssign(struct ParseState *Parser, struct Value *DestValue,
     switch (DestValue->Typ->Base) {
     case TypeInt:
         DestValue->Val->Integer = (int)ExpressionCoerceInteger(SourceValue);
-        stats_log_assignment(Parser, 0);
+        stats_log_assignment(Parser, STATS_TYPE_Int);
         break;
     case TypeShort:
         DestValue->Val->ShortInteger = (short)ExpressionCoerceInteger(SourceValue);
-        stats_log_assignment(Parser, 1);
+        stats_log_assignment(Parser, STATS_TYPE_Short);
         break;
     case TypeChar:
         DestValue->Val->Character = (char)ExpressionCoerceInteger(SourceValue);
-        stats_log_assignment(Parser, 2);
+        stats_log_assignment(Parser, STATS_TYPE_Char);
         break;
     case TypeLong:
         DestValue->Val->LongInteger = SourceValue->Val->LongInteger;
-        stats_log_assignment(Parser, 3);
+        stats_log_assignment(Parser, STATS_TYPE_Long);
         break;
     case TypeUnsignedInt:
         DestValue->Val->UnsignedInteger =
             (unsigned int)ExpressionCoerceUnsignedInteger(SourceValue);
-        stats_log_assignment(Parser, 4);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedInt);
         break;
     case TypeUnsignedShort:
         DestValue->Val->UnsignedShortInteger =
             (unsigned short)ExpressionCoerceUnsignedInteger(SourceValue);
-        stats_log_assignment(Parser, 5);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedShort);
         break;
     case TypeUnsignedLong:
         DestValue->Val->UnsignedLongInteger = SourceValue->Val->UnsignedLongInteger;
-        stats_log_assignment(Parser, 6);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedLong);
         break;
     case TypeUnsignedChar:
         DestValue->Val->UnsignedCharacter =
             (unsigned char)ExpressionCoerceUnsignedInteger(SourceValue);
-        stats_log_assignment(Parser, 7);
+        stats_log_assignment(Parser, STATS_TYPE_UnsignedChar);
         break;
     case TypeFP:
         if (!IS_NUMERIC_COERCIBLE_PLUS_POINTERS(SourceValue, AllowPointerCoercion))
             AssignFail(Parser, "%t from %t", DestValue->Typ, SourceValue->Typ,
                 0, 0, FuncName, ParamNo);
         DestValue->Val->FP = (double)ExpressionCoerceFP(SourceValue);
-        stats_log_assignment(Parser, 8);
+        stats_log_assignment(Parser, STATS_TYPE_FP);
         break;
     case TypePointer:
         ExpressionAssignToPointer(Parser, DestValue, SourceValue, FuncName,
@@ -790,10 +797,12 @@ void ExpressionPrefixOperator(struct ParseState *Parser,
             case TokenIncrement:
                 ResultPtr = TopValue->Val->Pointer =
                     (void*)((char*)TopValue->Val->Pointer+Size);
+                stats_log_assignment(Parser, STATS_TYPE_Pointer);
                 break;
             case TokenDecrement:
                 ResultPtr = TopValue->Val->Pointer =
                     (void*)((char*)TopValue->Val->Pointer-Size);
+                stats_log_assignment(Parser, STATS_TYPE_Pointer);
                 break;
             case TokenUnaryNot:
                 /* conditionally checking a pointer's value, we only want
@@ -877,9 +886,11 @@ void ExpressionPostfixOperator(struct ParseState *Parser,
         switch (Op) {
         case TokenIncrement:
             TopValue->Val->Pointer = (void*)((char*)TopValue->Val->Pointer+Size);
+            stats_log_assignment(Parser, STATS_TYPE_Pointer);
             break;
         case TokenDecrement:
             TopValue->Val->Pointer = (void*)((char*)TopValue->Val->Pointer-Size);
+            stats_log_assignment(Parser, STATS_TYPE_Pointer);
             break;
         default:
             ProgramFail(Parser, "invalid operation");
@@ -1183,6 +1194,7 @@ void ExpressionInfixOperator(struct ParseState *Parser,
 
             HeapUnpopStack(Parser->pc, sizeof(struct Value));
             BottomValue->Val->Pointer = Pointer;
+            stats_log_assignment(Parser, STATS_TYPE_Pointer);
             ExpressionStackPushValueNode(Parser, StackTop, BottomValue);
         } else
             ProgramFail(Parser, "invalid operation");

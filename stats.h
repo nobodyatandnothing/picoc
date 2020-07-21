@@ -7,6 +7,16 @@
 
 #include "interpreter.h"
 
+#define STATS_TYPE_Char 0
+#define STATS_TYPE_UnsignedChar 1
+#define STATS_TYPE_Short 2
+#define STATS_TYPE_UnsignedShort 3
+#define STATS_TYPE_Int 4
+#define STATS_TYPE_UnsignedInt 5
+#define STATS_TYPE_Long 6
+#define STATS_TYPE_UnsignedLong 7
+#define STATS_TYPE_FP 8
+#define STATS_TYPE_Pointer 9
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser);
 void stats_log_expression(enum LexToken token, struct ParseState *parser);
