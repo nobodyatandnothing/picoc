@@ -296,9 +296,13 @@ struct Value *VariableDefine(Picoc *pc, struct ParseState *Parser, char *Ident,
         Parser->FileName, Parser->Line, Parser->CharacterPos);
 #endif
 
-    if (InitValue != NULL)
-        AssignValue = VariableAllocValueAndCopy(pc, Parser, InitValue,
-            pc->TopStackFrame == NULL);
+    if (InitValue != NULL) {
+        /* If type is array then this is a function call so don't bother copying data as it will be overwritten */
+        if (InitValue->Typ->Base == TypeArray)
+            AssignValue = VariableAllocValueShared(Parser, InitValue);
+        else
+            AssignValue = VariableAllocValueAndCopy(pc, Parser, InitValue, pc->TopStackFrame == NULL);
+    }
     else
         AssignValue = VariableAllocValueFromType(pc, Parser, Typ, MakeWritable,
             NULL, pc->TopStackFrame == NULL);

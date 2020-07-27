@@ -1829,6 +1829,8 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
     struct Value *FuncValue = NULL;
     struct Value *Param;
     struct Value **ParamArray = NULL;
+    int ArrayParamsCount;
+    struct Value *ArrayParams[PARAMETER_MAX];
 
     if (RunIt) {
         /* get the function definition */
@@ -1860,6 +1862,7 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
 
     /* parse arguments */
     ArgCount = 0;
+    ArrayParamsCount = 0;
     do {
         if (RunIt && ArgCount < FuncValue->Val->FuncDef.NumParams)
             ParamArray[ArgCount] = VariableAllocValueFromType(Parser->pc, Parser,
@@ -1870,6 +1873,8 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
                 if (ArgCount < FuncValue->Val->FuncDef.NumParams) {
                     ExpressionAssign(Parser, ParamArray[ArgCount], Param, true,
                         FuncName, ArgCount+1, false);
+                    if (Param->Typ->Base == TypeArray)
+                        ArrayParams[ArrayParamsCount++] = Param->LValueFrom;
                     VariableStackPop(Parser, Param);
                 } else {
                     if (!FuncValue->Val->FuncDef.VarArgs)
@@ -1917,10 +1922,15 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
             /* Function parameters should not go out of scope */
             Parser->ScopeID = -1;
 
-            for (Count = 0; Count < FuncValue->Val->FuncDef.NumParams; Count++)
-                VariableDefine(Parser->pc, Parser,
+            ArrayParamsCount = 0;
+            for (Count = 0; Count < FuncValue->Val->FuncDef.NumParams; Count++) {
+                struct Value *var = VariableDefine(Parser->pc, Parser,
                     FuncValue->Val->FuncDef.ParamName[Count], ParamArray[Count],
                     NULL, true);
+                /* If passing an array, set the function internal data pointer to the external data */
+                if (var->Typ->Base == TypeArray)
+                    var->Val = ArrayParams[ArrayParamsCount++]->Val;
+            }
 
             Parser->ScopeID = OldScopeID;
 
