@@ -22,6 +22,11 @@ long const y;
 typedef int MyInt;
 MyInt z = 1;
 
+const int *test1;
+int *const test2;
+int *volatile test3;
+int *const volatile test4;
+
 int main(void) {
 	return 0;
 }

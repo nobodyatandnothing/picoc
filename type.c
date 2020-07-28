@@ -564,6 +564,7 @@ void TypeParseIdentPart(struct ParseState *Parser, struct ValueType *BasicTyp,
 {
     int Done = false;
     enum LexToken Token;
+    enum LexToken NextToken;
     struct Value *LexValue;
     struct ParseState Before;
     *Typ = BasicTyp;
@@ -588,6 +589,14 @@ void TypeParseIdentPart(struct ParseState *Parser, struct ValueType *BasicTyp,
 
             *Typ = TypeGetMatching(Parser->pc, Parser, *Typ, TypePointer, 0,
                 Parser->pc->StrEmpty, true);
+
+            /* Allow (but ignore) const/volatile pointer types */
+            NextToken = LexGetToken(Parser, NULL, false);
+            while (NextToken == TokenConstType || NextToken == TokenVolatileType) {
+                LexGetToken(Parser, NULL, true);
+                NextToken = LexGetToken(Parser, NULL, false);
+            }
+
             break;
 
         case TokenIdentifier:
