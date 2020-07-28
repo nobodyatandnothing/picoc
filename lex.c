@@ -203,12 +203,18 @@ enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Valu
         return ResultToken;
     }
 
-    if (*Lexer->Pos != '.' && *Lexer->Pos != 'e' && *Lexer->Pos != 'E') {
+    if (*Lexer->Pos != '.' && *Lexer->Pos != 'e' && *Lexer->Pos != 'E' && *Lexer->Pos != 'f' && *Lexer->Pos != 'F') {
         return ResultToken;
     }
 
     Value->Typ = &pc->FPType;
     FPResult = (double)Result;
+
+    if (*Lexer->Pos == 'f' || *Lexer->Pos == 'F') {
+        LEXER_INC(Lexer);
+        Value->Val->FP = FPResult;
+        return TokenFPConstant;
+    }
 
     if (*Lexer->Pos == '.') {
         LEXER_INC(Lexer);
@@ -224,6 +230,9 @@ enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Valu
         LEXER_INC(Lexer);
         if (Lexer->Pos != Lexer->End && *Lexer->Pos == '-') {
             ExponentSign = -1;
+            LEXER_INC(Lexer);
+        }
+        else if (Lexer->Pos != Lexer->End && *Lexer->Pos == '+') {
             LEXER_INC(Lexer);
         }
 
