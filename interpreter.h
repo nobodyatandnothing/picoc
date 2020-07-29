@@ -584,6 +584,8 @@ extern void TypeParseIdentPart(struct ParseState *Parser,
     struct ValueType *BasicTyp, struct ValueType **Typ, char **Identifier);
 extern void TypeParse(struct ParseState *Parser, struct ValueType **Typ,
     char **Identifier, int *IsStatic, int *IsExtern, int *IsVolatile);
+extern void TypeParseFull(struct ParseState *Parser, struct ValueType **Typ,
+    char **Identifier, int *IsStatic, int *IsExtern, int *IsVolatile);
 extern struct ValueType *TypeGetMatching(Picoc *pc, struct ParseState *Parser,
     struct ValueType *ParentType, enum BaseType Base, int ArraySize, const char *Identifier, int AllowDuplicates);
 extern struct ValueType *TypeCreateOpaqueStruct(Picoc *pc, struct ParseState *Parser,

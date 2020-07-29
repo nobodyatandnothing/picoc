@@ -630,6 +630,17 @@ void TypeParse(struct ParseState *Parser, struct ValueType **Typ,
     TypeParseIdentPart(Parser, BasicType, Typ, Identifier);
 }
 
+/* parse a type, but also check for any specified array size (for use in sizeof) */
+void TypeParseFull(struct ParseState *Parser, struct ValueType **Typ,
+    char **Identifier, int *IsStatic, int *IsExtern, int *IsVolatile)
+{
+    struct ValueType *BasicType;
+
+    TypeParseFront(Parser, &BasicType, IsStatic, IsExtern, IsVolatile);
+    TypeParseIdentPart(Parser, BasicType, Typ, Identifier);
+    *Typ = TypeParseBack(Parser, *Typ);
+}
+
 /* check if a type has been fully defined - otherwise it's
     just a forward declaration */
 int TypeIsForwardDeclared(struct ParseState *Parser, struct ValueType *Typ)

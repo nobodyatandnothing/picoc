@@ -1698,7 +1698,7 @@ int ExpressionParse(struct ParseState *Parser, struct Value **Result)
 
             PrefixState = false;
             ParserCopy(Parser, &PreState);
-            TypeParse(Parser, &Typ, &Identifier, NULL, NULL, NULL);
+            TypeParseFull(Parser, &Typ, &Identifier, NULL, NULL, NULL);
             TypeValue = VariableAllocValueFromType(Parser->pc, Parser,
                 &Parser->pc->TypeType, false, NULL, false);
             TypeValue->Val->Typ = Typ;
