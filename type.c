@@ -143,6 +143,7 @@ void TypeInit(Picoc *pc)
     struct ShortAlign {char x; short y;} sa;
     struct CharAlign {char x; char y;} ca;
     struct LongAlign {char x; long y;} la;
+    struct LongLongAlign {char x; long long y;} lla;
     struct DoubleAlign {char x; double y;} da;
     struct PointerAlign {char x; void *y;} pa;
 
@@ -157,12 +158,16 @@ void TypeInit(Picoc *pc)
         (char*)&ca.y - &ca.x);
     TypeAddBaseType(pc, &pc->LongType, TypeLong, sizeof(long),
         (char*)&la.y - &la.x);
+    TypeAddBaseType(pc, &pc->LongLongType, TypeLongLong, sizeof(long long),
+        (char*)&lla.y - &lla.x);
     TypeAddBaseType(pc, &pc->UnsignedIntType, TypeUnsignedInt,
         sizeof(unsigned int), IntAlignBytes);
     TypeAddBaseType(pc, &pc->UnsignedShortType, TypeUnsignedShort,
         sizeof(unsigned short), (char*)&sa.y - &sa.x);
     TypeAddBaseType(pc, &pc->UnsignedLongType, TypeUnsignedLong,
         sizeof(unsigned long), (char*)&la.y - &la.x);
+    TypeAddBaseType(pc, &pc->UnsignedLongLongType, TypeUnsignedLongLong,
+        sizeof(unsigned long long), (char*)&lla.y - &lla.x);
     TypeAddBaseType(pc, &pc->UnsignedCharType, TypeUnsignedChar,
         sizeof(unsigned char), (char*)&ca.y - &ca.x);
     TypeAddBaseType(pc, &pc->VoidType, TypeVoid, 0, 1);
@@ -396,6 +401,7 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
     int *IsStatic, int *IsExtern, int *IsVolatile)
 {
     int Unsigned = false;
+    int LongLong = false;
     int StaticQualifier = false;
     int ExternQualifier = false;
     int VolatileQualifier = false;
@@ -448,7 +454,7 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
 
     /* handle signed/unsigned with no trailing type */
     if (Token == TokenSignedType || Token == TokenUnsignedType) {
-        enum LexToken FollowToken = LexGetToken(Parser, NULL, false);
+        FollowToken = LexGetToken(Parser, NULL, false);
         Unsigned = (Token == TokenUnsignedType);
 
         if (FollowToken != TokenIntType && FollowToken != TokenLongType &&
@@ -464,9 +470,18 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
         Token = LexGetToken(Parser, &LexerValue, true);
     }
 
+    /* handle long long */
+    if (Token == TokenLongType) {
+        FollowToken = LexGetToken(Parser, NULL, false);
+        if (FollowToken == TokenLongType) {
+            LexGetToken(Parser, NULL, true);
+            LongLong = true;
+        }
+    }
+
     /* handle long or short with trailing int by consuming and ignoring the int */
     if (Token == TokenLongType || Token == TokenShortType) {
-        enum LexToken FollowToken = LexGetToken(Parser, NULL, false);
+        FollowToken = LexGetToken(Parser, NULL, false);
         if (FollowToken == TokenIntType) {
             LexGetToken(Parser, NULL, true);
         }
@@ -483,7 +498,10 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
         *Typ = Unsigned ? &pc->UnsignedCharType : &pc->CharType;
         break;
     case TokenLongType:
-        *Typ = Unsigned ? &pc->UnsignedLongType : &pc->LongType;
+        if (LongLong)
+            *Typ = Unsigned ? &pc->UnsignedLongLongType : &pc->LongLongType;
+        else
+            *Typ = Unsigned ? &pc->UnsignedLongType : &pc->LongType;
         break;
     case TokenFloatType:
     case TokenDoubleType:

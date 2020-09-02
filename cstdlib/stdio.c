@@ -258,26 +258,34 @@ int StdioBasePrintf(struct ParseState *Parser, FILE *Stream, char *StrOut,
                 switch (*FPos) {
                 case 'd':
                 case 'i':
-                    if (ShowLong) {
+                    if (ShowLong == 1) {
                         ShowLong = 0;
                         ShowType = &pc->LongType;
+                    } else if (ShowLong > 1) {
+                        ShowLong = 0;
+                        ShowType = &pc->LongLongType;
                     } else {
                         ShowType = &pc->IntType;
                     }
                     break;
                 case 'u':
-                    if (ShowLong) {
+                    if (ShowLong == 1) {
                         ShowLong = 0;
                         ShowType = &pc->UnsignedLongType;
-                        break;
+                    } else if (ShowLong > 1) {
+                        ShowLong = 0;
+                        ShowType = &pc->UnsignedLongLongType;
+                    } else {
+                        ShowType = &pc->UnsignedIntType;
                     }
+                    break;
                 case 'o':
                 case 'x':
                 case 'X':
                     ShowType = &pc->IntType;
                     break; /* integer base conversions */
                 case 'l':
-                    ShowLong = 1;
+                    ShowLong++;
                     break; /* long integer */
                 case 'e':
                 case 'E':
@@ -368,15 +376,33 @@ int StdioBasePrintf(struct ParseState *Parser, FILE *Stream, char *StrOut,
                         else
                             StdioOutPuts("XXX", &SOStream);
                     } else if (ShowType == &pc->UnsignedLongType) {
-                         /* show a unsigned long */
+                        /* show a unsigned long */
                         if (IS_NUMERIC_COERCIBLE(ThisArg))
-                                StdioFprintfLong(&SOStream, OneFormatBuf, ThisArg->Val->UnsignedLongInteger);
+                            StdioFprintfLong(&SOStream, OneFormatBuf, ThisArg->Val->UnsignedLongInteger);
+                        else
+                            StdioOutPuts("XXX", &SOStream);
+                    } else if (ShowType == &pc->LongLongType) {
+                        /* show a signed long long */
+                        if (IS_NUMERIC_COERCIBLE(ThisArg))
+                            StdioFprintfLong(&SOStream, OneFormatBuf, ThisArg->Val->LongLongInteger);
+                        else
+                            StdioOutPuts("XXX", &SOStream);
+                    } else if (ShowType == &pc->UnsignedLongLongType) {
+                        /* show an unsigned long long */
+                        if (IS_NUMERIC_COERCIBLE(ThisArg))
+                            StdioFprintfLong(&SOStream, OneFormatBuf, ThisArg->Val->UnsignedLongLongInteger);
                         else
                             StdioOutPuts("XXX", &SOStream);
                     } else if (ShowType == &pc->IntType) {
                         /* show a signed integer */
                         if (IS_NUMERIC_COERCIBLE(ThisArg))
-                                StdioFprintfWord(&SOStream, OneFormatBuf, (unsigned int)ExpressionCoerceUnsignedInteger(ThisArg));
+                                StdioFprintfWord(&SOStream, OneFormatBuf, (int)ExpressionCoerceInteger(ThisArg));
+                        else
+                            StdioOutPuts("XXX", &SOStream);
+                    } else if (ShowType == &pc->UnsignedIntType) {
+                        /* show an unsigned integer */
+                        if (IS_NUMERIC_COERCIBLE(ThisArg))
+                            StdioFprintfWord(&SOStream, OneFormatBuf, (unsigned int)ExpressionCoerceUnsignedInteger(ThisArg));
                         else
                             StdioOutPuts("XXX", &SOStream);
                     } else if (ShowType == &pc->FPType) {
@@ -924,9 +950,9 @@ void PrintCh(char OutCh, FILE *Stream)
     putc(OutCh, Stream);
 }
 
-void PrintSimpleInt(long Num, FILE *Stream)
+void PrintSimpleInt(long long Num, FILE *Stream)
 {
-    fprintf(Stream, "%ld", Num);
+    fprintf(Stream, "%lld", Num);
 }
 
 void PrintStr(const char *Str, FILE *Stream)

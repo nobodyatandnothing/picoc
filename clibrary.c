@@ -72,6 +72,9 @@ void PrintType(struct ValueType *Typ, IOFILE *Stream)
     case TypeLong:
         PrintStr("long", Stream);
         break;
+    case TypeLongLong:
+        PrintStr("long long", Stream);
+        break;
     case TypeUnsignedInt:
         PrintStr("unsigned int", Stream);
         break;
@@ -80,6 +83,9 @@ void PrintType(struct ValueType *Typ, IOFILE *Stream)
         break;
     case TypeUnsignedLong:
         PrintStr("unsigned long", Stream);
+        break;
+    case TypeUnsignedLongLong:
+        PrintStr("unsigned long long", Stream);
         break;
     case TypeUnsignedChar:
         PrintStr("unsigned char", Stream);

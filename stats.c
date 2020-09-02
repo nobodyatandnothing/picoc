@@ -6,7 +6,7 @@
 
 #define NO_RUN_MODES 7
 #define NO_TOKENS 101
-#define NO_TYPES 10
+#define NO_TYPES 12
 
 struct LexTokenStat {
     const char* name;
@@ -141,6 +141,8 @@ struct TypeStat TypeStats[NO_TYPES] = {
         {"UnsignedInt", 0},
         {"Long", 0},
         {"UnsignedLong", 0},
+        {"LongLong", 0},
+        {"UnsignedLongLong", 0},
         {"FloatingPoint", 0},
         {"Pointer", 0}
 };
