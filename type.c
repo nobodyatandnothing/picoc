@@ -144,6 +144,7 @@ void TypeInit(Picoc *pc)
     struct CharAlign {char x; char y;} ca;
     struct LongAlign {char x; long y;} la;
     struct LongLongAlign {char x; long long y;} lla;
+    struct FloatAlign {char x; float y;} fa;
     struct DoubleAlign {char x; double y;} da;
     struct PointerAlign {char x; void *y;} pa;
 
@@ -175,7 +176,9 @@ void TypeInit(Picoc *pc)
         IntAlignBytes);
     TypeAddBaseType(pc, &pc->MacroType, TypeMacro, sizeof(int), IntAlignBytes);
     TypeAddBaseType(pc, &pc->GotoLabelType, TypeGotoLabel, 0, 1);
-    TypeAddBaseType(pc, &pc->FPType, TypeFP, sizeof(double),
+    TypeAddBaseType(pc, &pc->FloatType, TypeFloat, sizeof(float),
+        (char*)&fa.y - &fa.x);
+    TypeAddBaseType(pc, &pc->DoubleType, TypeDouble, sizeof(double),
         (char*)&da.y - &da.x);
     TypeAddBaseType(pc, &pc->TypeType, Type_Type, sizeof(double),
     (char*)&da.y - &da.x);  /* must be large enough to cast to a double */
@@ -504,8 +507,10 @@ int TypeParseFront(struct ParseState *Parser, struct ValueType **Typ,
             *Typ = Unsigned ? &pc->UnsignedLongType : &pc->LongType;
         break;
     case TokenFloatType:
+        *Typ = &pc->FloatType;
+        break;
     case TokenDoubleType:
-        *Typ = &pc->FPType;
+        *Typ = &pc->DoubleType;
         break;
     case TokenVoidType:
         *Typ = &pc->VoidType;

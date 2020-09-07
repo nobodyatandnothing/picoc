@@ -10,7 +10,7 @@ static int Stdlib_ZeroValue = 0;
 void StdlibAtof(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-    ReturnValue->Val->FP = atof(Param[0]->Val->Pointer);
+    ReturnValue->Val->Float = atof(Param[0]->Val->Pointer);
 }
 
 void StdlibAtoi(struct ParseState *Parser, struct Value *ReturnValue,
@@ -25,10 +25,16 @@ void StdlibAtol(struct ParseState *Parser, struct Value *ReturnValue,
     ReturnValue->Val->Integer = atol(Param[0]->Val->Pointer);
 }
 
+void StdlibStrtof(struct ParseState *Parser, struct Value *ReturnValue,
+                  struct Value **Param, int NumArgs)
+{
+    ReturnValue->Val->Float = strtof(Param[0]->Val->Pointer, Param[1]->Val->Pointer);
+}
+
 void StdlibStrtod(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-    ReturnValue->Val->FP = strtod(Param[0]->Val->Pointer, Param[1]->Val->Pointer);
+    ReturnValue->Val->Double = strtod(Param[0]->Val->Pointer, Param[1]->Val->Pointer);
 }
 
 void StdlibStrtol(struct ParseState *Parser, struct Value *ReturnValue,
@@ -162,7 +168,8 @@ typedef struct { \
 struct LibraryFunction StdlibFunctions[] =
 {
     {StdlibAtof, "float atof(char *);"},
-    {StdlibStrtod, "float strtod(char *,char **);"},
+    {StdlibStrtof, "float strtof(char *,char **);"},
+    {StdlibStrtod, "double strtod(char *,char **);"},
     {StdlibAtoi, "int atoi(char *);"},
     {StdlibAtol, "int atol(char *);"},
     {StdlibStrtol, "int strtol(char *,char **,int);"},

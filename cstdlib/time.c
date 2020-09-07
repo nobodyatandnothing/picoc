@@ -35,7 +35,7 @@ void StdCtime(struct ParseState *Parser, struct Value *ReturnValue,
 void StdDifftime(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-    ReturnValue->Val->FP = difftime((time_t)Param[0]->Val->Integer,
+    ReturnValue->Val->Double = difftime((time_t)Param[0]->Val->Integer,
         Param[1]->Val->Integer);
 }
 

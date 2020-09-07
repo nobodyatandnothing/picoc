@@ -289,15 +289,15 @@ int StdioBasePrintf(struct ParseState *Parser, FILE *Stream, char *StrOut,
                     break; /* long integer */
                 case 'e':
                 case 'E':
-                    ShowType = &pc->FPType;
+                    ShowType = &pc->DoubleType;
                     break;      /* double, exponent form */
                 case 'f':
                 case 'F':
-                    ShowType = &pc->FPType;
+                    ShowType = &pc->DoubleType;
                     break;      /* double, fixed-point */
                 case 'g':
                 case 'G':
-                    ShowType = &pc->FPType;
+                    ShowType = &pc->DoubleType;
                     break;      /* double, flexible format */
                 case 'a':
                 case 'A':
@@ -405,7 +405,7 @@ int StdioBasePrintf(struct ParseState *Parser, FILE *Stream, char *StrOut,
                             StdioFprintfWord(&SOStream, OneFormatBuf, (unsigned int)ExpressionCoerceUnsignedInteger(ThisArg));
                         else
                             StdioOutPuts("XXX", &SOStream);
-                    } else if (ShowType == &pc->FPType) {
+                    } else if (ShowType == &pc->FloatType || ShowType == &pc->DoubleType) {
                         /* show a floating point number */
                         if (IS_NUMERIC_COERCIBLE(ThisArg))
                             StdioFprintfFP(&SOStream, OneFormatBuf,

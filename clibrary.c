@@ -90,7 +90,10 @@ void PrintType(struct ValueType *Typ, IOFILE *Stream)
     case TypeUnsignedChar:
         PrintStr("unsigned char", Stream);
         break;
-    case TypeFP:
+    case TypeFloat:
+        PrintStr("float", Stream);
+        break;
+    case TypeDouble:
         PrintStr("double", Stream);
         break;
     case TypeFunction:

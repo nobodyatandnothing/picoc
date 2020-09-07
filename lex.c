@@ -207,13 +207,13 @@ enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Valu
         return ResultToken;
     }
 
-    Value->Typ = &pc->FPType;
+    Value->Typ = &pc->DoubleType;
     FPResult = (double)Result;
 
     if (*Lexer->Pos == 'f' || *Lexer->Pos == 'F') {
         LEXER_INC(Lexer);
-        Value->Val->FP = FPResult;
-        return TokenFPConstant;
+        Value->Val->Float = (float)FPResult;
+        return TokenFloatConstant;
     }
 
     if (*Lexer->Pos == '.') {
@@ -245,12 +245,15 @@ enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Valu
         FPResult *= pow((double)Base, (double)Result * ExponentSign);
     }
 
-    Value->Val->FP = FPResult;
-
-    if (*Lexer->Pos == 'f' || *Lexer->Pos == 'F')
+    if (*Lexer->Pos == 'f' || *Lexer->Pos == 'F') {
         LEXER_INC(Lexer);
+        Value->Val->Float = (float)FPResult;
+        return TokenFloatConstant;
+    }
 
-    return TokenFPConstant;
+    Value->Val->Double = FPResult;
+
+    return TokenDoubleConstant;
 }
 
 /* get a reserved word or identifier - used while scanning */
@@ -628,7 +631,8 @@ int LexTokenSize(enum LexToken Token)
     case TokenIdentifier: case TokenStringConstant: return sizeof(char*);
     case TokenIntegerConstant: return sizeof(long);
     case TokenCharacterConstant: return sizeof(unsigned char);
-    case TokenFPConstant: return sizeof(double);
+    case TokenFloatConstant: return sizeof(float);
+    case TokenDoubleConstant: return sizeof(double);
     default: return 0;
     }
 }
@@ -835,8 +839,11 @@ enum LexToken LexGetRawToken(struct ParseState *Parser, struct Value **Value,
             case TokenCharacterConstant:
                 pc->LexValue.Typ = &pc->CharType;
                 break;
-            case TokenFPConstant:
-                pc->LexValue.Typ = &pc->FPType;
+            case TokenFloatConstant:
+                pc->LexValue.Typ = &pc->FloatType;
+                break;
+            case TokenDoubleConstant:
+                pc->LexValue.Typ = &pc->DoubleType;
                 break;
             default:
                 break;

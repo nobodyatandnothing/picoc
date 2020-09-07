@@ -5,8 +5,8 @@
 #include "stats.h"
 
 #define NO_RUN_MODES 7
-#define NO_TOKENS 101
-#define NO_TYPES 12
+#define NO_TOKENS 102
+#define NO_TYPES 13
 
 struct LexTokenStat {
     const char* name;
@@ -76,7 +76,8 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenCloseBracket", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenIdentifier", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
-        {"TokenFPConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenFloatConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenDoubleConstant", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenStringConstant", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenCharacterConstant", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenSemicolon", {0, 0, 0, 0, 0, 0, 0}},
@@ -143,7 +144,8 @@ struct TypeStat TypeStats[NO_TYPES] = {
         {"UnsignedLong", 0},
         {"LongLong", 0},
         {"UnsignedLongLong", 0},
-        {"FloatingPoint", 0},
+        {"Float", 0},
+        {"Double", 0},
         {"Pointer", 0}
 };
 

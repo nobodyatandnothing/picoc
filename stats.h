@@ -17,8 +17,9 @@
 #define STATS_TYPE_UnsignedLong 7
 #define STATS_TYPE_LongLong 8
 #define STATS_TYPE_UnsignedLongLong 9
-#define STATS_TYPE_FP 10
-#define STATS_TYPE_Pointer 11
+#define STATS_TYPE_Float 10
+#define STATS_TYPE_Double 11
+#define STATS_TYPE_Pointer 12
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser);
 void stats_log_expression(enum LexToken token, struct ParseState *parser);

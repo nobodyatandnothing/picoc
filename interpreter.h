@@ -58,8 +58,8 @@
 typedef FILE IOFILE;
 
 /* coercion of numeric types to other numeric types */
-#define IS_FP(v) ((v)->Typ->Base == TypeFP)
-#define FP_VAL(v) ((v)->Val->FP)
+#define IS_FP(v) ((v)->Typ->Base == TypeFloat || (v)->Typ->Base == TypeDouble)
+#define FP_VAL(v) ((v)->Val->Double)
 
 /* ap -> AllowPointerCoercion = true | false */
 #define IS_POINTER_COERCIBLE(v, ap) ((ap) ? ((v)->Typ->Base == TypePointer) : 0)
@@ -125,20 +125,21 @@ enum LexToken {
                TokenCloseBracket,
     /* 0x2d */ TokenIdentifier,
                TokenIntegerConstant,
-               TokenFPConstant,
+               TokenFloatConstant,
+               TokenDoubleConstant,
                TokenStringConstant,
                TokenCharacterConstant,
-    /* 0x32 */ TokenSemicolon,
+    /* 0x33 */ TokenSemicolon,
                TokenEllipsis,
-    /* 0x34 */ TokenLeftBrace,
+    /* 0x35 */ TokenLeftBrace,
                TokenRightBrace,
-    /* 0x36 */ TokenIntType,
+    /* 0x37 */ TokenIntType,
                TokenCharType,
                TokenFloatType,
                TokenDoubleType,
                TokenVoidType,
                TokenEnumType,
-    /* 0x3c */ TokenLongType,
+    /* 0x3d */ TokenLongType,
                TokenSignedType,
                TokenShortType,
                TokenStaticType,
@@ -149,7 +150,7 @@ enum LexToken {
                TokenUnionType,
                TokenUnsignedType,
                TokenTypedef,
-    /* 0x46 */ TokenContinue,
+    /* 0x47 */ TokenContinue,
                TokenDo,
                TokenElse,
                TokenFor,
@@ -161,17 +162,17 @@ enum LexToken {
                TokenCase,
                TokenDefault,
                TokenReturn,
-    /* 0x52 */ TokenHashDefine,
+    /* 0x53 */ TokenHashDefine,
                TokenHashInclude,
                TokenHashIf,
                TokenHashIfdef,
                TokenHashIfndef,
                TokenHashElse,
                TokenHashEndif,
-    /* 0x59 */ TokenNew,
+    /* 0x5a */ TokenNew,
                TokenDelete,
-    /* 0x5b */ TokenOpenMacroBracket,
-    /* 0x5c */ TokenEOF,
+    /* 0x5c */ TokenOpenMacroBracket,
+    /* 0x5d */ TokenEOF,
                TokenEndOfLine,
                TokenEndOfFunction,
                TokenBackSlash,
@@ -230,7 +231,8 @@ enum BaseType {
     TypeUnsignedChar,           /* unsigned 8-bit number */ /* must be before unsigned long */
     TypeUnsignedLong,           /* unsigned long integer */
     TypeUnsignedLongLong,       /* unsigned long long integer */
-    TypeFP,                     /* floating point */
+    TypeFloat,                  /* floating point */
+    TypeDouble,                 /* double-precision floating point */
     TypeFunction,               /* a function */
     TypeMacro,                  /* a macro */
     TypePointer,                /* a pointer */
@@ -296,7 +298,8 @@ union AnyValue {
     struct ValueType *Typ;
     struct FuncDef FuncDef;
     struct MacroDef MacroDef;
-    double FP;
+    float Float;
+    double Double;
     void *Pointer;      /* unsafe native pointers */
 };
 
@@ -481,7 +484,8 @@ struct Picoc_Struct {
     struct ValueType UnsignedLongType;
     struct ValueType UnsignedLongLongType;
     struct ValueType UnsignedCharType;
-    struct ValueType FPType;
+    struct ValueType FloatType;
+    struct ValueType DoubleType;
     struct ValueType VoidType;
     struct ValueType TypeType;
     struct ValueType FunctionType;
