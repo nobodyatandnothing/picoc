@@ -22,7 +22,7 @@ void StdlibAtoi(struct ParseState *Parser, struct Value *ReturnValue,
 void StdlibAtol(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-    ReturnValue->Val->Integer = atol(Param[0]->Val->Pointer);
+    ReturnValue->Val->LongInteger = atol(Param[0]->Val->Pointer);
 }
 
 void StdlibStrtof(struct ParseState *Parser, struct Value *ReturnValue,
@@ -40,14 +40,14 @@ void StdlibStrtod(struct ParseState *Parser, struct Value *ReturnValue,
 void StdlibStrtol(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-    ReturnValue->Val->Integer = strtol(Param[0]->Val->Pointer,
+    ReturnValue->Val->LongInteger = strtol(Param[0]->Val->Pointer,
         Param[1]->Val->Pointer, Param[2]->Val->Integer);
 }
 
 void StdlibStrtoul(struct ParseState *Parser, struct Value *ReturnValue,
     struct Value **Param, int NumArgs)
 {
-    ReturnValue->Val->Integer = strtoul(Param[0]->Val->Pointer,
+    ReturnValue->Val->UnsignedLongInteger = strtoul(Param[0]->Val->Pointer,
         Param[1]->Val->Pointer, Param[2]->Val->Integer);
 }
 
@@ -171,9 +171,9 @@ struct LibraryFunction StdlibFunctions[] =
     {StdlibStrtof, "float strtof(char *,char **);"},
     {StdlibStrtod, "double strtod(char *,char **);"},
     {StdlibAtoi, "int atoi(char *);"},
-    {StdlibAtol, "int atol(char *);"},
-    {StdlibStrtol, "int strtol(char *,char **,int);"},
-    {StdlibStrtoul, "int strtoul(char *,char **,int);"},
+    {StdlibAtol, "long int atol(char *);"},
+    {StdlibStrtol, "long int strtol(char *,char **,int);"},
+    {StdlibStrtoul, "unsigned long int strtoul(char *,char **,int);"},
     {StdlibMalloc, "void *malloc(int);"},
     {StdlibCalloc, "void *calloc(int,int);"},
     {StdlibRealloc, "void *realloc(void *,int);"},
