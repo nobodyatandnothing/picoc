@@ -2048,7 +2048,7 @@ void ExpressionParseFunctionCall(struct ParseState *Parser,
 
             Parser->ScopeID = OldScopeID;
 
-            if (ParseStatement(&FuncParser, true, false) != ParseResultOk)
+            if (ParseStatement(&FuncParser, true, false, NULL) != ParseResultOk)
                 ProgramFail(&FuncParser, "function body expected");
 
             if (RunIt) {

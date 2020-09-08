@@ -565,7 +565,7 @@ extern void LexInteractiveStatementPrompt(Picoc *pc);
  * void PicocParseInteractive(); */
 extern void PicocParseInteractiveNoStartPrompt(Picoc *pc, int EnableDebugger);
 extern enum ParseResult ParseStatement(struct ParseState *Parser,
-    int CheckTrailingSemicolon, int DoNotConsumeTrailingSemicolon);
+    int CheckTrailingSemicolon, int DoNotConsumeTrailingSemicolon, int *WasPreprocessor);
 extern struct Value *ParseFunctionDefinition(struct ParseState *Parser,
     struct ValueType *ReturnType, char *Identifier);
 extern void ParseCleanup(Picoc *pc);
