@@ -542,7 +542,8 @@ void ParseFor(struct ParseState *Parser)
 
     ParserCopyPos(&After, Parser);
 
-    stats_log_loop_entry(Parser);
+    if (Parser->Mode == RunModeRun)
+        stats_log_loop_entry(Parser);
 
     while (Condition && Parser->Mode == RunModeRun) {
         ParserCopyPos(Parser, &PreIncrement);
@@ -576,7 +577,8 @@ void ParseFor(struct ParseState *Parser)
 
     ParserCopyPos(Parser, &After);
 
-    stats_log_loop_exit(Parser);
+    if (Parser->Mode == RunModeRun)
+        stats_log_loop_exit(Parser);
 }
 
 /* parse a block of code and return what mode it returned in */
