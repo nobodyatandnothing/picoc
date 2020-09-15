@@ -677,3 +677,80 @@ int TypeIsForwardDeclared(struct ParseState *Parser, struct ValueType *Typ)
 
     return false;
 }
+
+/* get the rank of an integer type */
+int TypeIntRank(enum BaseType Type)
+{
+    switch (Type) {
+        case TypeChar:
+        case TypeUnsignedChar:
+            return 1;
+        case TypeShort:
+        case TypeUnsignedShort:
+            return 2;
+        case TypeInt:
+        case TypeUnsignedInt:
+            return 3;
+        case TypeLong:
+        case TypeUnsignedLong:
+            return 4;
+        case TypeLongLong:
+        case TypeUnsignedLongLong:
+            return 5;
+        default:
+            return 0;
+    }
+}
+
+/* get the length of an integer type */
+int TypeIntSize(enum BaseType Type)
+{
+    switch (Type) {
+        case TypeChar:
+            return sizeof(char);
+        case TypeUnsignedChar:
+            return sizeof(unsigned char);
+        case TypeShort:
+            return sizeof(short);
+        case TypeUnsignedShort:
+            return sizeof(unsigned short);
+        case TypeInt:
+            return sizeof(int);
+        case TypeUnsignedInt:
+            return sizeof(unsigned int);
+        case TypeLong:
+            return sizeof(long);
+        case TypeUnsignedLong:
+            return sizeof(unsigned long);
+        case TypeLongLong:
+            return sizeof(long long);
+        case TypeUnsignedLongLong:
+            return sizeof(unsigned long long);
+        default:
+            return 0;
+    }
+}
+
+/* get the unsigned counterpart of an integer type */
+int TypeIntUnsignedCounterpart(enum BaseType Type)
+{
+    switch (Type) {
+        case TypeChar:
+        case TypeUnsignedChar:
+            return TypeUnsignedChar;
+        case TypeShort:
+        case TypeUnsignedShort:
+            return TypeUnsignedShort;
+        case TypeInt:
+        case TypeUnsignedInt:
+            return TypeUnsignedInt;
+        case TypeLong:
+        case TypeUnsignedLong:
+            return TypeUnsignedLong;
+        case TypeLongLong:
+        case TypeUnsignedLongLong:
+            return TypeUnsignedLongLong;
+        default:
+            return TypeUnsignedLongLong;
+    }
+}

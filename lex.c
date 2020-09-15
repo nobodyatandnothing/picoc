@@ -1,5 +1,6 @@
 /* picoc lexer - converts source text into a tokenised form */
 
+#include <limits.h>
 #include "interpreter.h"
 
 
@@ -151,27 +152,26 @@ enum LexToken LexCheckReservedWord(Picoc *pc, const char *Word)
 }
 
 /* get a numeric literal - used while scanning */
-enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Value)
-{
-    long Result = 0;
-    long Base = 10;
-    enum LexToken ResultToken;
+enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Value) {
+    unsigned long long Result = 0;
+    int Base = 10;
+    enum BaseType ResultType = TypeUnsignedLongLong;
     double FPResult;
     double FPDiv;
     /* long/unsigned flags */
-#if 0 /* unused for now */
-    char IsLong = 0;
-    char IsUnsigned = 0;
-#endif
+    int IsLong = 0;
+    int IsUnsigned = 0;
 
     if (*Lexer->Pos == '0') {
         /* a binary, octal or hex literal */
         LEXER_INC(Lexer);
         if (Lexer->Pos != Lexer->End) {
             if (*Lexer->Pos == 'x' || *Lexer->Pos == 'X') {
-                Base = 16; LEXER_INC(Lexer);
+                Base = 16;
+                LEXER_INC(Lexer);
             } else if (*Lexer->Pos == 'b' || *Lexer->Pos == 'B') {
-                Base = 2; LEXER_INC(Lexer);
+                Base = 2;
+                LEXER_INC(Lexer);
             } else if (*Lexer->Pos != '.')
                 Base = 8;
         }
@@ -182,29 +182,90 @@ enum LexToken LexGetNumber(Picoc *pc, struct LexState *Lexer, struct Value *Valu
             LEXER_INC(Lexer))
         Result = Result * Base + GET_BASE_DIGIT(*Lexer->Pos);
 
-    if (*Lexer->Pos == 'u' || *Lexer->Pos == 'U') {
+    while (*Lexer->Pos == 'u' || *Lexer->Pos == 'U' || *Lexer->Pos == 'l' || *Lexer->Pos == 'L') {
+        if (*Lexer->Pos == 'u' || *Lexer->Pos == 'U') {
+            IsUnsigned = 1;
+        } else if (*Lexer->Pos == 'l' || *Lexer->Pos == 'L') {
+            IsLong++;
+        }
         LEXER_INC(Lexer);
-        /* IsUnsigned = 1; */
-    }
-    if (*Lexer->Pos == 'l' || *Lexer->Pos == 'L') {
-        LEXER_INC(Lexer);
-        /* IsLong = 1; */
     }
 
-    Value->Typ = &pc->LongType; /* ignored? */
-    Value->Val->LongInteger = Result;
+    /* it's an integer literal, so calculate the type and return it */
+    if ((Lexer->Pos == Lexer->End) || (*Lexer->Pos != '.' && *Lexer->Pos != 'e' && *Lexer->Pos != 'E' && *Lexer->Pos != 'f' && *Lexer->Pos != 'F')) {
+        /* Integer literal types from https://en.cppreference.com/w/cpp/language/integer_literal */
+        if (!IsUnsigned) {
+            if (Base == 10) {
+                if (Result > LONG_MAX || IsLong > 1) {
+                    if (IsLong == 1 && Result <= ULONG_MAX) {
+                        ResultType = TypeUnsignedLong;
+                    } else {
+                        ResultType = TypeLongLong;
+                    }
+                } else if (Result > INT_MAX || IsLong == 1) {
+                    ResultType = TypeLong;
+                } else {
+                    ResultType = TypeInt;
+                }
+            } else {
+                if (Result > ULONG_MAX || IsLong > 1) {
+                    if (Result > LONG_LONG_MAX) {
+                        ResultType = TypeUnsignedLongLong;
+                    } else {
+                        ResultType = TypeLongLong;
+                    }
+                } else if (Result > UINT_MAX || IsLong == 1) {
+                    if (Result > LONG_MAX) {
+                        ResultType = TypeUnsignedLong;
+                    } else {
+                        ResultType = TypeLong;
+                    }
+                } else {
+                    if (Result > INT_MAX) {
+                        ResultType = TypeUnsignedInt;
+                    } else {
+                        ResultType = TypeInt;
+                    }
+                }
+            }
+        } else {
+            if (Result > ULONG_MAX || IsLong > 1) {
+                ResultType = TypeUnsignedLongLong;
+            } else if (Result > UINT_MAX || IsLong == 1) {
+                ResultType = TypeUnsignedLong;
+            } else {
+                ResultType = TypeUnsignedInt;
+            }
+        }
 
-    ResultToken = TokenIntegerConstant;
+        Value->Val->UnsignedLongLongInteger = 0;
 
-    if (Lexer->Pos == Lexer->End)
-        return ResultToken;
-
-    if (Lexer->Pos == Lexer->End) {
-        return ResultToken;
-    }
-
-    if (*Lexer->Pos != '.' && *Lexer->Pos != 'e' && *Lexer->Pos != 'E' && *Lexer->Pos != 'f' && *Lexer->Pos != 'F') {
-        return ResultToken;
+        switch (ResultType) {
+        case TypeInt:
+            Value->Typ = &pc->IntType;
+            Value->Val->Integer = (int)Result;
+            return TokenIntegerConstant;
+        case TypeUnsignedInt:
+            Value->Typ = &pc->UnsignedIntType;
+            Value->Val->UnsignedInteger = (unsigned int)Result;
+            return TokenUnsignedIntegerConstant;
+        case TypeLong:
+            Value->Typ = &pc->LongType;
+            Value->Val->LongInteger = (long)Result;
+            return TokenLongIntegerConstant;
+        case TypeUnsignedLong:
+            Value->Typ = &pc->UnsignedLongType;
+            Value->Val->UnsignedLongInteger = (unsigned long)Result;
+            return TokenUnsignedLongIntegerConstant;
+        case TypeLongLong:
+            Value->Typ = &pc->LongLongType;
+            Value->Val->LongLongInteger = (long long)Result;
+            return TokenLongLongIntegerConstant;
+        default:
+            Value->Typ = &pc->UnsignedLongLongType;
+            Value->Val->UnsignedLongLongInteger = Result;
+            return TokenUnsignedLongLongIntegerConstant;
+        }
     }
 
     Value->Typ = &pc->DoubleType;
@@ -628,12 +689,24 @@ enum LexToken LexScanGetToken(Picoc *pc, struct LexState *Lexer,
 int LexTokenSize(enum LexToken Token)
 {
     switch (Token) {
-    case TokenIdentifier: case TokenStringConstant: return sizeof(char*);
-    case TokenIntegerConstant: return sizeof(long);
-    case TokenCharacterConstant: return sizeof(unsigned char);
-    case TokenFloatConstant: return sizeof(float);
-    case TokenDoubleConstant: return sizeof(double);
-    default: return 0;
+    case TokenIdentifier:
+    case TokenStringConstant:
+            return sizeof(char*);
+    case TokenIntegerConstant:
+    case TokenUnsignedIntegerConstant:
+    case TokenLongIntegerConstant:
+    case TokenUnsignedLongIntegerConstant:
+    case TokenLongLongIntegerConstant:
+    case TokenUnsignedLongLongIntegerConstant:
+        return sizeof(unsigned long long);
+    case TokenCharacterConstant:
+        return sizeof(unsigned char);
+    case TokenFloatConstant:
+        return sizeof(float);
+    case TokenDoubleConstant:
+        return sizeof(double);
+    default:
+        return 0;
     }
 }
 
@@ -834,7 +907,22 @@ enum LexToken LexGetRawToken(struct ParseState *Parser, struct Value **Value,
                 pc->LexValue.Typ = NULL;
                 break;
             case TokenIntegerConstant:
+                pc->LexValue.Typ = &pc->IntType;
+                break;
+            case TokenUnsignedIntegerConstant:
+                pc->LexValue.Typ = &pc->UnsignedIntType;
+                break;
+            case TokenLongIntegerConstant:
                 pc->LexValue.Typ = &pc->LongType;
+                break;
+            case TokenUnsignedLongIntegerConstant:
+                pc->LexValue.Typ = &pc->UnsignedLongType;
+                break;
+            case TokenLongLongIntegerConstant:
+                pc->LexValue.Typ = &pc->LongLongType;
+                break;
+            case TokenUnsignedLongLongIntegerConstant:
+                pc->LexValue.Typ = &pc->UnsignedLongLongType;
                 break;
             case TokenCharacterConstant:
                 pc->LexValue.Typ = &pc->CharType;
@@ -849,6 +937,7 @@ enum LexToken LexGetRawToken(struct ParseState *Parser, struct Value **Value,
                 break;
             }
 
+            pc->LexValue.Val->UnsignedLongLongInteger = 0;
             memcpy((void*)pc->LexValue.Val,
                 (void*)((char*)Parser->Pos+TOKEN_DATA_OFFSET), ValueSize);
             pc->LexValue.ValOnHeap = false;
@@ -925,7 +1014,7 @@ void LexHashIf(struct ParseState *Parser)
         Token = LexGetRawToken(&MacroParser, &IdentValue, true);
     }
 
-    if (Token != TokenCharacterConstant && Token != TokenIntegerConstant)
+    if (Token != TokenCharacterConstant && (Token < TokenIntegerConstant || Token > TokenUnsignedLongLongIntegerConstant))
         ProgramFail(Parser, "value expected");
 
     /* is the identifier defined? */

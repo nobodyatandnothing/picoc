@@ -5,7 +5,7 @@
 #include "stats.h"
 
 #define NO_RUN_MODES 7
-#define NO_TOKENS 102
+#define NO_TOKENS 107
 #define NO_TYPES 13
 
 struct LexTokenStat {
@@ -76,6 +76,11 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenCloseBracket", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenIdentifier", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenUnsignedIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenLongIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenUnsignedLongIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenLongLongIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
+        {"TokenUnsignedLongLongIntegerConstant", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenFloatConstant", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenDoubleConstant", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenStringConstant", {0, 0, 0, 0, 0, 0, 0}},

@@ -139,6 +139,8 @@ struct Value *VariableAllocValueAndCopy(Picoc *pc, struct ParseState *Parser,
     NewValue = VariableAllocValueAndData(pc, Parser, CopySize,
         FromValue->IsLValue, FromValue->LValueFrom, OnHeap);
     NewValue->Typ = DType;
+    /* clear the full integer value, in case we only copy into the low bits */
+    NewValue->Val->UnsignedLongLongInteger = 0;
     memcpy((void*)NewValue->Val, (void*)&TmpBuf[0], CopySize);
 
     return NewValue;

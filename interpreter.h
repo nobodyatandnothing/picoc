@@ -70,6 +70,12 @@ typedef FILE IOFILE;
 #define IS_NUMERIC_COERCIBLE(v) (IS_INTEGER_NUMERIC(v) || IS_FP(v))
 #define IS_NUMERIC_COERCIBLE_PLUS_POINTERS(v,ap) (IS_NUMERIC_COERCIBLE(v) || IS_POINTER_COERCIBLE(v,ap))
 
+#define IS_UNSIGNED_TYPE(type) ((type) == TypeUnsignedChar  || \
+                                (type) == TypeUnsignedShort || \
+                                (type) == TypeUnsignedInt   || \
+                                (type) == TypeUnsignedLong  || \
+                                (type) == TypeUnsignedLongLong)
+
 
 struct Table;
 struct Picoc_Struct;
@@ -125,21 +131,26 @@ enum LexToken {
                TokenCloseBracket,
     /* 0x2d */ TokenIdentifier,
                TokenIntegerConstant,
+               TokenUnsignedIntegerConstant,
+               TokenLongIntegerConstant,
+               TokenUnsignedLongIntegerConstant,
+               TokenLongLongIntegerConstant,
+               TokenUnsignedLongLongIntegerConstant,
                TokenFloatConstant,
                TokenDoubleConstant,
                TokenStringConstant,
                TokenCharacterConstant,
-    /* 0x33 */ TokenSemicolon,
+    /* 0x38 */ TokenSemicolon,
                TokenEllipsis,
-    /* 0x35 */ TokenLeftBrace,
+    /* 0x3a */ TokenLeftBrace,
                TokenRightBrace,
-    /* 0x37 */ TokenIntType,
+    /* 0x3c */ TokenIntType,
                TokenCharType,
                TokenFloatType,
                TokenDoubleType,
                TokenVoidType,
                TokenEnumType,
-    /* 0x3d */ TokenLongType,
+    /* 0x42 */ TokenLongType,
                TokenSignedType,
                TokenShortType,
                TokenStaticType,
@@ -150,7 +161,7 @@ enum LexToken {
                TokenUnionType,
                TokenUnsignedType,
                TokenTypedef,
-    /* 0x47 */ TokenContinue,
+    /* 0x4d */ TokenContinue,
                TokenDo,
                TokenElse,
                TokenFor,
@@ -162,17 +173,17 @@ enum LexToken {
                TokenCase,
                TokenDefault,
                TokenReturn,
-    /* 0x53 */ TokenHashDefine,
+    /* 0x59 */ TokenHashDefine,
                TokenHashInclude,
                TokenHashIf,
                TokenHashIfdef,
                TokenHashIfndef,
                TokenHashElse,
                TokenHashEndif,
-    /* 0x5a */ TokenNew,
+    /* 0x60 */ TokenNew,
                TokenDelete,
-    /* 0x5c */ TokenOpenMacroBracket,
-    /* 0x5d */ TokenEOF,
+    /* 0x62 */ TokenOpenMacroBracket,
+    /* 0x63 */ TokenEOF,
                TokenEndOfLine,
                TokenEndOfFunction,
                TokenBackSlash,
@@ -601,6 +612,9 @@ extern struct ValueType *TypeGetMatching(Picoc *pc, struct ParseState *Parser,
 extern struct ValueType *TypeCreateOpaqueStruct(Picoc *pc, struct ParseState *Parser,
     const char *StructName, int Size);
 extern int TypeIsForwardDeclared(struct ParseState *Parser, struct ValueType *Typ);
+extern int TypeIntRank(enum BaseType Type);
+extern int TypeIntSize(enum BaseType Type);
+extern int TypeIntUnsignedCounterpart(enum BaseType Type);
 
 /* heap.c */
 #ifdef DEBUG_HEAP
