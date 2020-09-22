@@ -69,11 +69,17 @@ int main(int argc, char **argv)
         }
         CollectStats = true;
         pc.CollectStats = true;
-        if (StatsType > 9) {
+        if (StatsType >= 10 && StatsType < 20) {
             pc.PrintStats = true;
+            pc.PrintExpressions = false;
             StatsType -= 10;
+        } else if (StatsType >= 20 && StatsType < 30) {
+            pc.PrintStats = false;
+            pc.PrintExpressions = true;
+            StatsType -= 20;
         } else {
             pc.PrintStats = false;
+            pc.PrintExpressions = false;
         }
         ParamCount++;
     }
@@ -106,8 +112,10 @@ int main(int argc, char **argv)
      * 6: Print maximum measured function call, loop and conditional statement depths
      * 7: Print number of assignments to each basic variable type
      * 8: Print number of assignments to each basic variable type, in CSV format (one row, no header row)
+     * 9: Print details of expressions encountered during execution
      *
      * Add 10 to each type to also print token information to stderr in real-time as they are parsed.
+     * Add 20 to each type to also print expressions information to stderr in real-time as they are executed.
      */
 
     if (CollectStats) {
@@ -138,6 +146,9 @@ int main(int argc, char **argv)
                 break;
             case 8:
                 stats_print_assignments_csv();
+                break;
+            case 9:
+                stats_print_expressions();
                 break;
             default:
                 break;

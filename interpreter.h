@@ -537,6 +537,7 @@ struct Picoc_Struct {
     /* stats */
     int CollectStats;
     int PrintStats;
+    int PrintExpressions;
 };
 
 /* table.c */

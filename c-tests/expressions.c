@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 	d[0] = 1;
 //	*(d + 1) = 2;
 //	return a = 1, b = 2;
-	return a = 1;
+	return a = 0;
 
 	a = b++;
 }

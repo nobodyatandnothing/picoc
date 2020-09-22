@@ -839,6 +839,8 @@ void ExpressionPrefixOperator(struct ParseState *Parser,
     printf("ExpressionPrefixOperator()\n");
 #endif
 
+    stats_log_expression_evaluation(Parser, ExpressionPrefix, Op, NULL, TopValue);
+
     switch (Op) {
     case TokenAmpersand:
         if (!TopValue->IsLValue)
@@ -1017,6 +1019,8 @@ void ExpressionPostfixOperator(struct ParseState *Parser,
     printf("ExpressionPostfixOperator()\n");
 #endif
 
+    stats_log_expression_evaluation(Parser, ExpressionPostfix, Op, NULL, TopValue);
+
     if (TopValue->Typ == &Parser->pc->FloatType) {
         /* floating point prefix arithmetic */
         float ResultFP = 0.0f;
@@ -1126,6 +1130,8 @@ void ExpressionInfixOperator(struct ParseState *Parser,
 #ifdef DEBUG_EXPRESSIONS
     printf("ExpressionInfixOperator()\n");
 #endif
+
+    stats_log_expression_evaluation(Parser, ExpressionInfix, Op, BottomValue, TopValue);
 
     if (BottomValue == NULL || TopValue == NULL)
         ProgramFail(Parser, "invalid expression");
@@ -1507,6 +1513,8 @@ void ExpressionStackCollapse(struct ParseState *Parser,
     struct ExpressionStack *TopStackNode = *StackTop;
     struct ExpressionStack *TopOperatorNode;
 
+    stats_log_expression_stack_collapse(Parser);
+
 #ifdef DEBUG_EXPRESSIONS
     printf("ExpressionStackCollapse(%d):\n", Precedence);
     ExpressionStackShow(Parser->pc, *StackTop);
@@ -1724,6 +1732,8 @@ int ExpressionParse(struct ParseState *Parser, struct Value **Result)
     struct Value *LexValue;
     struct ExpressionStack *StackTop = NULL;
 
+    stats_log_expression_parse(Parser);
+
 #ifdef DEBUG_EXPRESSIONS
     printf("ExpressionParse():\n");
 #endif
@@ -1735,7 +1745,7 @@ int ExpressionParse(struct ParseState *Parser, struct Value **Result)
         ParserCopy(&PreState, Parser);
         Token = LexGetToken(Parser, &LexValue, true);
 
-        stats_log_expression(Token, Parser);
+        stats_log_expression_token_parse(Token, Parser);
 
         if ((((int)Token > TokenComma && (int)Token <= (int)TokenOpenBracket) ||
                (Token == TokenCloseBracket && BracketPrecedence != 0)) &&

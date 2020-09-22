@@ -21,8 +21,15 @@
 #define STATS_TYPE_Double 11
 #define STATS_TYPE_Pointer 12
 
+enum ExpressionType {
+    ExpressionPrefix,
+    ExpressionInfix,
+    ExpressionPostfix,
+    ExpressionReturn
+};
+
 void stats_log_statement(enum LexToken token, struct ParseState *parser);
-void stats_log_expression(enum LexToken token, struct ParseState *parser);
+void stats_log_expression_token_parse(enum LexToken token, struct ParseState *parser);
 void stats_log_function_definition(int parameterCount, struct ParseState *parser);
 void stats_log_function_entry(struct ParseState *parser, int argCount);
 void stats_log_function_exit(struct ParseState *parser);
@@ -31,6 +38,9 @@ void stats_log_loop_exit(struct ParseState *parser);
 void stats_log_conditional_entry(struct ParseState *parser, int condition);
 void stats_log_conditional_exit(struct ParseState *parser, int condition);
 void stats_log_assignment(struct ParseState *parser, int type);
+void stats_log_expression_parse(struct ParseState *Parser);
+void stats_log_expression_stack_collapse(struct ParseState *parser);
+void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionType Type, enum LexToken Op, struct Value *BottomValue, struct Value *TopValue);
 void stats_print_tokens(int all);
 void stats_print_tokens_csv(void);
 void stats_print_tokens_csv_runmode(enum RunMode runMode);
@@ -41,5 +51,6 @@ void stats_print_watermarks(void);
 void stats_print_types_list(void);
 void stats_print_assignments(void);
 void stats_print_assignments_csv(void);
+void stats_print_expressions(void);
 
 #endif //PICOC_STATS_H

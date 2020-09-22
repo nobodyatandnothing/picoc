@@ -3,10 +3,13 @@
 //
 
 #include "stats.h"
+#include "interpreter.h"
 
 #define NO_RUN_MODES 7
 #define NO_TOKENS 107
 #define NO_TYPES 13
+#define NO_BASETYPES 22
+#define NO_OPERATORS 45
 
 struct LexTokenStat {
     const char* name;
@@ -154,6 +157,81 @@ struct TypeStat TypeStats[NO_TYPES] = {
         {"Pointer", 0}
 };
 
+const char *BaseTypeNames[NO_BASETYPES] = {
+        "Void",
+        "Int",
+        "Short",
+        "Char",
+        "Long",
+        "LongLong",
+        "UnsignedInt",
+        "UnsignedShort",
+        "UnsignedChar",
+        "UnsignedLong",
+        "UnsignedLongLong",
+        "Float",
+        "Double",
+        "Function",
+        "Macro",
+        "Pointer",
+        "Array",
+        "Struct",
+        "Union",
+        "Enum",
+        "GotoLabel",
+        "_Type"
+};
+
+const char *OperatorSymbols[NO_OPERATORS] = {
+        "none",
+        ",",
+        "=",
+        "+=",
+        "-=",
+        "*=",
+        "/=" ,
+        "%=" ,
+        "<<=",
+        ">>=" ,
+        "&=" ,
+        "|=",
+        "^=" ,
+        "?",
+        ":" ,
+        "||",
+        "&&",
+        "|",
+        "^",
+        "&",
+        "==",
+        "!=",
+        "<",
+        ">",
+        "<=",
+        ">=",
+        "<<",
+        ">>",
+        "+",
+        "-",
+        "*",
+        "/",
+        "%",
+        "++",
+        "--",
+        "!",
+        "~",
+        "sizeof",
+        "cast",
+        "[",
+        "]",
+        ".",
+        "->",
+        "(",
+        ")"
+};
+
+
+
 unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};
 unsigned int FunctionParameterDynamicCounts[PARAMETER_MAX + 1] = {0};
 unsigned int FunctionCallDepth = 0;
@@ -176,11 +254,11 @@ void stats_log_statement(enum LexToken token, struct ParseState *parser)
 }
 
 
-void stats_log_expression(enum LexToken token, struct ParseState *parser)
+void stats_log_expression_token_parse(enum LexToken token, struct ParseState *parser)
 {
     if (parser->pc->CollectStats) {
         if (parser->pc->PrintStats) {
-            fprintf(stderr, "Parsing Expression %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
+            fprintf(stderr, "Parsing Expression Token %s (%d) in %s (%d) at %s:%d:%d\n", LexTokenStats[token].name, token,
                     RunModeNames[parser->Mode], parser->Mode, parser->FileName, parser->Line, parser->CharacterPos);
         }
         LexTokenStats[token].count[parser->Mode]++;
@@ -293,6 +371,70 @@ void stats_log_assignment(struct ParseState *parser, int type) {
 }
 
 
+void stats_log_expression_parse(struct ParseState *Parser)
+{
+    if (Parser->pc->CollectStats && (Parser->Mode == RunModeRun) && (strcmp(Parser->FileName, "startup") != 0)) {
+
+        /* temporarily move the parser to the next token to get more accurate file coordinates */
+        struct ParseState PreState;
+        ParserCopy(&PreState, Parser);
+        LexGetToken(Parser, NULL, true);
+
+        if (Parser->pc->PrintExpressions) {
+            fprintf(stderr, "\n---\nParsing expression at %s:%d:%d\n", Parser->FileName, Parser->Line, Parser->CharacterPos);
+        }
+
+        ParserCopy(Parser, &PreState);
+    }
+}
+
+
+void stats_log_expression_stack_collapse(struct ParseState *parser)
+{
+    if (parser->pc->CollectStats && (parser->Mode == RunModeRun) && (strcmp(parser->FileName, "startup") != 0)) {
+        if (parser->pc->PrintExpressions) {
+//            fprintf(stderr, "Collapsing expression stack at %s:%d:%d\n", parser->FileName, parser->Line, parser->CharacterPos);
+        }
+    }
+}
+
+
+void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionType Type, enum LexToken Op, struct Value *BottomValue, struct Value *TopValue)
+{
+    if (parser->pc->CollectStats && (parser->Mode == RunModeRun) && (strcmp(parser->FileName, "startup") != 0)) {
+        if (parser->pc->PrintExpressions) {
+            const char *TopTypeName = TopValue ? BaseTypeNames[TopValue->Typ->Base] : "";
+            const char *BottomTypeName = BottomValue ? BaseTypeNames[BottomValue->Typ->Base] : "";
+            const char *OpSymbol = (Op < NO_OPERATORS) ? OperatorSymbols[Op] : "";
+
+            switch (Type) {
+            case ExpressionInfix:
+                if (Op == TokenAssign) {
+                    fprintf(stderr, "Evaluating assign expression at %s:%d:%d   var<%s> = %s \n", parser->FileName,
+                            parser->Line, parser->CharacterPos, BottomTypeName, TopTypeName);
+                } else {
+                    fprintf(stderr, "Evaluating infix expression at %s:%d:%d    %s %s %s \n", parser->FileName,
+                            parser->Line, parser->CharacterPos, BottomTypeName, OpSymbol, TopTypeName);
+                }
+                break;
+            case ExpressionPrefix:
+                fprintf(stderr, "Evaluating prefix expression at %s:%d:%d   %s%s \n", parser->FileName, parser->Line, parser->CharacterPos, OpSymbol, TopTypeName);
+                break;
+            case ExpressionPostfix:
+                fprintf(stderr, "Evaluating postfix expression at %s:%d:%d  %s%s \n", parser->FileName, parser->Line, parser->CharacterPos, TopTypeName, OpSymbol);
+                break;
+            case ExpressionReturn:
+                fprintf(stderr, "Evaluating return expression at %s:%d:%d   ret<%s> = %s \n", parser->FileName, parser->Line, parser->CharacterPos, BottomTypeName, TopTypeName);
+                break;
+            default:
+                fprintf(stderr, "Invalid expression type\n");
+                break;
+            }
+        }
+    }
+}
+
+
 void stats_print_tokens(int all)
 {
     printf("\n*********\nToken stats:\n");
@@ -396,4 +538,10 @@ void stats_print_assignments_csv(void)
         printf("%d,", TypeStats[i].assignments);
     }
     printf("%d\n", TypeStats[NO_TYPES - 1].assignments);
+}
+
+
+void stats_print_expressions(void)
+{
+    printf("\nSummarised expressions output will go here...\n");
 }

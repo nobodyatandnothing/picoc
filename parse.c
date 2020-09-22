@@ -331,6 +331,7 @@ void ParseDeclarationAssignment(struct ParseState *Parser,
             ProgramFail(Parser, "expression expected");
 
         if (Parser->Mode == RunModeRun && DoAssignment) {
+            stats_log_expression_evaluation(Parser, ExpressionInfix, TokenAssign, NewVariable, CValue);
             ExpressionAssign(Parser, NewVariable, CValue, false, NULL, 0, false);
             VariableStackPop(Parser, CValue);
         }
@@ -874,10 +875,12 @@ enum ParseResult ParseStatement(struct ParseState *Parser,
                     ProgramFail(Parser, "value required in return");
                 if (!Parser->pc->TopStackFrame) /* return from top-level program? */
                     PlatformExit(Parser->pc, ExpressionCoerceInteger(CValue));
-                else
+                else {
+                    stats_log_expression_evaluation(Parser, ExpressionReturn, TokenAssign, Parser->pc->TopStackFrame->ReturnValue, CValue);
                     ExpressionAssign(Parser,
                         Parser->pc->TopStackFrame->ReturnValue, CValue, true,
                         NULL, 0, false);
+                }
                 VariableStackPop(Parser, CValue);
             } else {
                 if (ExpressionParse(Parser, &CValue))
