@@ -5,15 +5,15 @@
 #include "stats.h"
 #include "interpreter.h"
 
-#define NO_RUN_MODES 7
-#define NO_TOKENS 107
-#define NO_TYPES 13
-#define NO_BASETYPES 22
-#define NO_OPERATORS 45
+#define NUM_RUN_MODES 7
+#define NUM_TOKENS 107
+#define NUM_TYPES 13
+#define NUM_BASE_TYPES 22
+#define NUM_OPERATORS 45
 
 struct LexTokenStat {
     const char* name;
-    int count[NO_RUN_MODES];
+    int count[NUM_RUN_MODES];
 };
 
 struct TypeStat {
@@ -21,7 +21,7 @@ struct TypeStat {
     int assignments;
 };
 
-const char *RunModeNames[NO_RUN_MODES] = {
+const char *RunModeNames[NUM_RUN_MODES] = {
         "RunModeRun",
         "RunModeSkip",
         "RunModeReturn",
@@ -31,7 +31,7 @@ const char *RunModeNames[NO_RUN_MODES] = {
         "RunModeGoto"
 };
 
-struct LexTokenStat LexTokenStats[NO_TOKENS] = {
+struct LexTokenStat LexTokenStats[NUM_TOKENS] = {
         {"TokenNone", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenComma", {0, 0, 0, 0, 0, 0, 0}},
         {"TokenAssign", {0, 0, 0, 0, 0, 0, 0}},
@@ -141,7 +141,7 @@ struct LexTokenStat LexTokenStats[NO_TOKENS] = {
         {"TokenConstType", {0, 0, 0, 0, 0, 0, 0}}
 };
 
-struct TypeStat TypeStats[NO_TYPES] = {
+struct TypeStat TypeStats[NUM_TYPES] = {
         {"Char", 0},
         {"UnsignedChar", 0},
         {"Short", 0},
@@ -157,7 +157,7 @@ struct TypeStat TypeStats[NO_TYPES] = {
         {"Pointer", 0}
 };
 
-const char *BaseTypeNames[NO_BASETYPES] = {
+const char *BaseTypeNames[NUM_BASE_TYPES] = {
         "Void",
         "Int",
         "Short",
@@ -182,7 +182,7 @@ const char *BaseTypeNames[NO_BASETYPES] = {
         "_Type"
 };
 
-const char *OperatorSymbols[NO_OPERATORS] = {
+const char *OperatorSymbols[NUM_OPERATORS] = {
         "none",
         ",",
         "=",
@@ -405,7 +405,7 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
         if (parser->pc->PrintExpressions) {
             const char *TopTypeName = TopValue ? BaseTypeNames[TopValue->Typ->Base] : "";
             const char *BottomTypeName = BottomValue ? BaseTypeNames[BottomValue->Typ->Base] : "";
-            const char *OpSymbol = (Op < NO_OPERATORS) ? OperatorSymbols[Op] : "";
+            const char *OpSymbol = (Op < NUM_OPERATORS) ? OperatorSymbols[Op] : "";
 
             switch (Type) {
             case ExpressionInfix:
@@ -438,10 +438,10 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
 void stats_print_tokens(int all)
 {
     printf("\n*********\nToken stats:\n");
-    for (int i = 0; i < NO_RUN_MODES; i++) {
+    for (int i = 0; i < NUM_RUN_MODES; i++) {
         printf("***\n");
         printf("%s\n", RunModeNames[i]);
-        for (int j = 0; j < NO_TOKENS; j++) {
+        for (int j = 0; j < NUM_TOKENS; j++) {
             if (all || LexTokenStats[j].count[i] > 0) {
                 printf("%5d %s\n", LexTokenStats[j].count[i], LexTokenStats[j].name);
             }
@@ -454,12 +454,12 @@ void stats_print_tokens(int all)
 void stats_print_tokens_csv()
 {
     printf("RunMode");
-    for (int j = 0; j < NO_TOKENS; j++) {
+    for (int j = 0; j < NUM_TOKENS; j++) {
         printf(",%s", LexTokenStats[j].name);
     }
-    for (int i = 0; i < NO_RUN_MODES; i++) {
+    for (int i = 0; i < NUM_RUN_MODES; i++) {
         printf("\n%s", RunModeNames[i]);
-        for (int j = 0; j < NO_TOKENS; j++) {
+        for (int j = 0; j < NUM_TOKENS; j++) {
             printf(",%d", LexTokenStats[j].count[i]);
         }
     }
@@ -469,28 +469,28 @@ void stats_print_tokens_csv()
 
 void stats_print_tokens_csv_runmode(enum RunMode runMode)
 {
-    for (int i = 0; i < NO_TOKENS - 1; i++) {
+    for (int i = 0; i < NUM_TOKENS - 1; i++) {
         printf("%d,", LexTokenStats[i].count[runMode]);
     }
-    printf("%d\n", LexTokenStats[NO_TOKENS - 1].count[runMode]);
+    printf("%d\n", LexTokenStats[NUM_TOKENS - 1].count[runMode]);
 }
 
 
 void stats_print_runmode_list(void)
 {
-    for (int i = 0; i < NO_RUN_MODES - 1; i++) {
+    for (int i = 0; i < NUM_RUN_MODES - 1; i++) {
         printf("%s,", RunModeNames[i]);
     }
-    printf("%s\n", RunModeNames[NO_RUN_MODES - 1]);
+    printf("%s\n", RunModeNames[NUM_RUN_MODES - 1]);
 }
 
 
 void stats_print_token_list(void)
 {
-    for (int i = 0; i < NO_TOKENS - 1; i++) {
+    for (int i = 0; i < NUM_TOKENS - 1; i++) {
         printf("%s,", LexTokenStats[i].name);
     }
-    printf("%s\n", LexTokenStats[NO_TOKENS - 1].name);
+    printf("%s\n", LexTokenStats[NUM_TOKENS - 1].name);
 }
 
 
@@ -517,16 +517,16 @@ void stats_print_watermarks(void)
 
 void stats_print_types_list(void)
 {
-    for (int i = 0; i < NO_TYPES - 1; i++) {
+    for (int i = 0; i < NUM_TYPES - 1; i++) {
         printf("%s,", TypeStats[i].name);
     }
-    printf("%s\n", TypeStats[NO_TYPES - 1].name);
+    printf("%s\n", TypeStats[NUM_TYPES - 1].name);
 }
 
 
 void stats_print_assignments(void)
 {
-    for (int i = 0; i < NO_TYPES; i++) {
+    for (int i = 0; i < NUM_TYPES; i++) {
         printf("%s: %d\n", TypeStats[i].name, TypeStats[i].assignments);
     }
 }
@@ -534,10 +534,10 @@ void stats_print_assignments(void)
 
 void stats_print_assignments_csv(void)
 {
-    for (int i = 0; i < NO_TYPES - 1; i++) {
+    for (int i = 0; i < NUM_TYPES - 1; i++) {
         printf("%d,", TypeStats[i].assignments);
     }
-    printf("%d\n", TypeStats[NO_TYPES - 1].assignments);
+    printf("%d\n", TypeStats[NUM_TYPES - 1].assignments);
 }
 
 
