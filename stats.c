@@ -10,6 +10,7 @@
 #define NUM_TYPES 13
 #define NUM_BASE_TYPES 22
 #define NUM_OPERATORS 45
+#define NUM_EXPRESSION_TYPES 4
 
 struct LexTokenStat {
     const char* name;
@@ -240,6 +241,7 @@ unsigned int LoopDepth = 0;
 unsigned int LoopWatermark = 0;
 unsigned int ConditionalDepth = 0;
 unsigned int ConditionalWatermark = 0;
+unsigned int ExpressionCounts[NUM_EXPRESSION_TYPES][NUM_OPERATORS][NUM_BASE_TYPES][NUM_BASE_TYPES] = {{{{0}}}};
 
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser)
@@ -402,18 +404,30 @@ void stats_log_expression_stack_collapse(struct ParseState *parser)
 void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionType Type, enum LexToken Op, struct Value *BottomValue, struct Value *TopValue)
 {
     if (parser->pc->CollectStats && (parser->Mode == RunModeRun) && (strcmp(parser->FileName, "startup") != 0)) {
+        enum BaseType TopType = TopValue ? TopValue->Typ->Base : 0;
+        enum BaseType BottomType = BottomValue ? BottomValue->Typ->Base : 0;
+
+        if (Type == ExpressionInfix && Op == TokenLeftSquareBracket && BottomValue && BottomType == TypeArray) {
+            BottomType = BottomValue->Typ->FromType->Base;
+        }
+
+        ExpressionCounts[Type][Op][TopType][BottomType]++;
+
         if (parser->pc->PrintExpressions) {
-            const char *TopTypeName = TopValue ? BaseTypeNames[TopValue->Typ->Base] : "";
-            const char *BottomTypeName = BottomValue ? BaseTypeNames[BottomValue->Typ->Base] : "";
-            const char *OpSymbol = (Op < NUM_OPERATORS) ? OperatorSymbols[Op] : "";
+            const char *TopTypeName = TopValue ? BaseTypeNames[TopType] : "";
+            const char *BottomTypeName = BottomValue ? BaseTypeNames[BottomType] : "";
+            const char *OpSymbol = OperatorSymbols[Op];
 
             switch (Type) {
             case ExpressionInfix:
                 if (Op == TokenAssign) {
-                    fprintf(stderr, "Evaluating assign expression at %s:%d:%d   var<%s> = %s \n", parser->FileName,
+                    fprintf(stderr, "Evaluating assign expression at %s:%d:%d   var<%s> = %s\n", parser->FileName,
+                            parser->Line, parser->CharacterPos, BottomTypeName, TopTypeName);
+                } else if (Op == TokenLeftSquareBracket) {
+                    fprintf(stderr, "Evaluating array expression at %s:%d:%d    arr<%s>[%s]\n", parser->FileName,
                             parser->Line, parser->CharacterPos, BottomTypeName, TopTypeName);
                 } else {
-                    fprintf(stderr, "Evaluating infix expression at %s:%d:%d    %s %s %s \n", parser->FileName,
+                    fprintf(stderr, "Evaluating infix expression at %s:%d:%d    %s %s %s\n", parser->FileName,
                             parser->Line, parser->CharacterPos, BottomTypeName, OpSymbol, TopTypeName);
                 }
                 break;
@@ -543,5 +557,44 @@ void stats_print_assignments_csv(void)
 
 void stats_print_expressions(void)
 {
-    printf("\nSummarised expressions output will go here...\n");
+    printf("\n");
+
+    for (int Type = 0; Type < NUM_EXPRESSION_TYPES; Type++) {
+        for (int Op = 0; Op < NUM_OPERATORS; Op++) {
+            for (int TopType = 0; TopType < NUM_BASE_TYPES; TopType++) {
+                for (int BottomType = 0; BottomType < NUM_BASE_TYPES; BottomType++) {
+                    unsigned int count = ExpressionCounts[Type][Op][TopType][BottomType];
+                    if (count > 0) {
+                        const char *TopTypeName = BaseTypeNames[TopType];
+                        const char *BottomTypeName = BaseTypeNames[BottomType];
+                        const char *OpSymbol = OperatorSymbols[Op];
+
+                        switch (Type) {
+                            case ExpressionInfix:
+                                if (Op == TokenAssign) {
+                                    printf("%4d assign expressions   var<%s> = %s\n", count, BottomTypeName, TopTypeName);
+                                } else if (Op == TokenLeftSquareBracket) {
+                                    printf("%4d array expressions    arr<%s>[%s]\n", count, BottomTypeName, TopTypeName);
+                                } else {
+                                    printf("%4d infix expressions    %s %s %s\n", count, BottomTypeName, OpSymbol, TopTypeName);
+                                }
+                                break;
+                            case ExpressionPrefix:
+                                printf("%4d prefix expressions   %s%s \n", count, OpSymbol, TopTypeName);
+                                break;
+                            case ExpressionPostfix:
+                                printf("%4d postfix expressions  %s%s \n", count, TopTypeName, OpSymbol);
+                                break;
+                            case ExpressionReturn:
+                                printf("%4d return expressions   ret<%s> = %s \n", count, BottomTypeName, TopTypeName);
+                                break;
+                            default:
+                                printf("Invalid expression type\n");
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
