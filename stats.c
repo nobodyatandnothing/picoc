@@ -241,6 +241,8 @@ unsigned int LoopDepth = 0;
 unsigned int LoopWatermark = 0;
 unsigned int ConditionalDepth = 0;
 unsigned int ConditionalWatermark = 0;
+unsigned int ExpressionDepth = 0;
+unsigned int ExpressionWatermark = 0;
 unsigned int ExpressionCounts[NUM_EXPRESSION_TYPES][NUM_OPERATORS][NUM_BASE_TYPES][NUM_BASE_TYPES] = {{{{0}}}};
 
 
@@ -377,6 +379,8 @@ void stats_log_expression_parse(struct ParseState *Parser)
 {
     if (Parser->pc->CollectStats && (Parser->Mode == RunModeRun) && (strcmp(Parser->FileName, "startup") != 0)) {
 
+        ExpressionDepth = 0;
+
         /* temporarily move the parser to the next token to get more accurate file coordinates */
         struct ParseState PreState;
         ParserCopy(&PreState, Parser);
@@ -407,6 +411,11 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
         enum BaseType TopType = TopValue ? TopValue->Typ->Base : 0;
         enum BaseType BottomType = BottomValue ? BottomValue->Typ->Base : 0;
 
+        ExpressionDepth++;
+        if (ExpressionDepth > ExpressionWatermark) {
+            ExpressionWatermark = ExpressionDepth;
+        }
+
         if (Type == ExpressionInfix && Op == TokenLeftSquareBracket && BottomValue && BottomType == TypeArray) {
             BottomType = BottomValue->Typ->FromType->Base;
         }
@@ -432,13 +441,13 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
                 }
                 break;
             case ExpressionPrefix:
-                fprintf(stderr, "Evaluating prefix expression at %s:%d:%d   %s%s \n", parser->FileName, parser->Line, parser->CharacterPos, OpSymbol, TopTypeName);
+                fprintf(stderr, "Evaluating prefix expression at %s:%d:%d   %s%s\n", parser->FileName, parser->Line, parser->CharacterPos, OpSymbol, TopTypeName);
                 break;
             case ExpressionPostfix:
-                fprintf(stderr, "Evaluating postfix expression at %s:%d:%d  %s%s \n", parser->FileName, parser->Line, parser->CharacterPos, TopTypeName, OpSymbol);
+                fprintf(stderr, "Evaluating postfix expression at %s:%d:%d  %s%s\n", parser->FileName, parser->Line, parser->CharacterPos, TopTypeName, OpSymbol);
                 break;
             case ExpressionReturn:
-                fprintf(stderr, "Evaluating return expression at %s:%d:%d   ret<%s> = %s \n", parser->FileName, parser->Line, parser->CharacterPos, BottomTypeName, TopTypeName);
+                fprintf(stderr, "Evaluating return expression at %s:%d:%d   ret<%s> = %s\n", parser->FileName, parser->Line, parser->CharacterPos, BottomTypeName, TopTypeName);
                 break;
             default:
                 fprintf(stderr, "Invalid expression type\n");
@@ -572,24 +581,24 @@ void stats_print_expressions(void)
                         switch (Type) {
                             case ExpressionInfix:
                                 if (Op == TokenAssign) {
-                                    printf("%4d assign expressions   var<%s> = %s\n", count, BottomTypeName, TopTypeName);
+                                    printf("%7d   assign expressions of type   var<%s> = %s\n", count, BottomTypeName, TopTypeName);
                                 } else if (Op == TokenLeftSquareBracket) {
-                                    printf("%4d array expressions    arr<%s>[%s]\n", count, BottomTypeName, TopTypeName);
+                                    printf("%7d    array expressions of type   arr<%s>[%s]\n", count, BottomTypeName, TopTypeName);
                                 } else {
-                                    printf("%4d infix expressions    %s %s %s\n", count, BottomTypeName, OpSymbol, TopTypeName);
+                                    printf("%7d    infix expressions of type   %s %s %s\n", count, BottomTypeName, OpSymbol, TopTypeName);
                                 }
                                 break;
                             case ExpressionPrefix:
-                                printf("%4d prefix expressions   %s%s \n", count, OpSymbol, TopTypeName);
+                                printf("%7d   prefix expressions of type   %s%s\n", count, OpSymbol, TopTypeName);
                                 break;
                             case ExpressionPostfix:
-                                printf("%4d postfix expressions  %s%s \n", count, TopTypeName, OpSymbol);
+                                printf("%7d  postfix expressions of type   %s%s\n", count, TopTypeName, OpSymbol);
                                 break;
                             case ExpressionReturn:
-                                printf("%4d return expressions   ret<%s> = %s \n", count, BottomTypeName, TopTypeName);
+                                printf("%7d   return expressions of type   ret<%s> = %s\n", count, BottomTypeName, TopTypeName);
                                 break;
                             default:
-                                printf("Invalid expression type\n");
+                                printf("Warning: Invalid expression type\n");
                                 break;
                         }
                     }
@@ -597,4 +606,6 @@ void stats_print_expressions(void)
             }
         }
     }
+
+    printf("\nMaximum expression depth: %d\n", ExpressionWatermark);
 }
