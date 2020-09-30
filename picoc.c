@@ -109,7 +109,7 @@ int main(int argc, char **argv)
      * 3: Print all tokens for RunModeRun only in CSV format (one row, no header row)
      * 4: Print CSV list of function definition parameter counts
      * 5: Print CSV list of runtime function call parameter counts
-     * 6: Print maximum measured function call, loop and conditional statement depths
+     * 6: Print maximum measured function call, loop, conditional statement and expression chain depths
      * 7: Print number of assignments to each basic variable type
      * 8: Print number of assignments to each basic variable type, in CSV format (one row, no header row)
      * 9: Print details of expressions encountered during execution

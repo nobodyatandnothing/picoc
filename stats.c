@@ -606,7 +606,7 @@ void stats_print_function_parameter_counts(bool dynamic)
 
 void stats_print_watermarks(void)
 {
-    printf("%u,%u,%u\n", FunctionCallWatermark, LoopWatermark, ConditionalWatermark);
+    printf("%u,%u,%u,%u\n", FunctionCallWatermark, LoopWatermark, ConditionalWatermark, ExpressionWatermark);
 }
 
 
