@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="picoc adpcm_dec.c" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="-d0x18 adpcm_dec.c" REDIRECT_INPUT="false" WORKING_DIR="file://$ProjectFileDir$/c-tests" PASS_PARENT_ENVS_2="true" PROJECT_NAME="picoc" TARGET_NAME="picoc" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="picoc" RUN_TARGET_NAME="picoc">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>

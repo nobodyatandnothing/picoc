@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="picoc basic.c (full expressions)" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="-d0x10a basic.c" REDIRECT_INPUT="false" WORKING_DIR="file://$ProjectFileDir$/c-tests" PASS_PARENT_ENVS_2="true" PROJECT_NAME="picoc" TARGET_NAME="picoc" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="picoc" RUN_TARGET_NAME="picoc">
+    <method v="2">
+      <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+    </method>
+  </configuration>
+</component>
