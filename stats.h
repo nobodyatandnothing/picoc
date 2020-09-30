@@ -51,6 +51,7 @@ void stats_print_watermarks(void);
 void stats_print_types_list(void);
 void stats_print_assignments(void);
 void stats_print_assignments_csv(void);
+void stats_print_expressions_summary(void);
 void stats_print_expressions(void);
 
 #endif //PICOC_STATS_H

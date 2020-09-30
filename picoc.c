@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     int ParamCount = 1;
     int DontRunMain = false;
     int CollectStats = false;
-    int StatsType = 0;
+    long StatsType = 0;
     int StackSize = getenv("STACKSIZE") ? atoi(getenv("STACKSIZE")) : PICOC_STACK_SIZE;
     Picoc pc;
 
@@ -65,22 +65,20 @@ int main(int argc, char **argv)
         return 0;
     } else if (strncmp(argv[ParamCount], "-d", 2) == 0) {
         if (strlen(argv[ParamCount]) > 2) {
-            StatsType = atoi(&argv[ParamCount][2]);
+            StatsType = strtol(&argv[ParamCount][2], NULL, 0);
         }
         CollectStats = true;
         pc.CollectStats = true;
-        if (StatsType >= 10 && StatsType < 20) {
-            pc.PrintStats = true;
-            pc.PrintExpressions = false;
-            StatsType -= 10;
-        } else if (StatsType >= 20 && StatsType < 30) {
-            pc.PrintStats = false;
+        if (StatsType >= 0x100) {
             pc.PrintExpressions = true;
-            StatsType -= 20;
-        } else {
-            pc.PrintStats = false;
-            pc.PrintExpressions = false;
+            StatsType -= 0x100;
         }
+        if (StatsType >= 0x10) {
+            pc.PrintStats = true;
+            StatsType -= 0x10;
+        }
+        if (StatsType == 0xa)
+            pc.CollectFullExpressions = true;
         ParamCount++;
     }
 
@@ -103,51 +101,55 @@ int main(int argc, char **argv)
     PicocCleanup(&pc);
 
     /* Stats types:
-     * 0: Print tokens that have been seen for each run mode
-     * 1: Print all tokens for each run mode
-     * 2: Print all tokens for each run mode in CSV format (multiple rows, with header row)
-     * 3: Print all tokens for RunModeRun only in CSV format (one row, no header row)
-     * 4: Print CSV list of function definition parameter counts
-     * 5: Print CSV list of runtime function call parameter counts
-     * 6: Print maximum measured function call, loop, conditional statement and expression chain depths
-     * 7: Print number of assignments to each basic variable type
-     * 8: Print number of assignments to each basic variable type, in CSV format (one row, no header row)
-     * 9: Print details of expressions encountered during execution
+     * 0x0: Print tokens that have been seen for each run mode
+     * 0x1: Print all tokens for each run mode
+     * 0x2: Print all tokens for each run mode in CSV format (multiple rows, with header row)
+     * 0x3: Print all tokens for RunModeRun only in CSV format (one row, no header row)
+     * 0x4: Print CSV list of function definition parameter counts
+     * 0x5: Print CSV list of runtime function call parameter counts
+     * 0x6: Print maximum measured function call, loop, conditional statement and expression chain depths
+     * 0x7: Print number of assignments to each basic variable type
+     * 0x8: Print number of assignments to each basic variable type, in CSV format (one row, no header row)
+     * 0x9: Print summary of expressions encountered during execution and their counts
+     * 0xa: Print full list of expressions encountered during execution
      *
-     * Add 10 to each type to also print token information to stderr in real-time as they are parsed.
-     * Add 20 to each type to also print expressions information to stderr in real-time as they are executed.
+     * Add 0x010 to each type to also print token information to stderr in real-time as they are parsed.
+     * Add 0x100 to each type to also print expressions information to stderr in real-time as they are executed.
      */
 
     if (CollectStats) {
         switch (StatsType) {
-            case 0:
+            case 0x00:
                 stats_print_tokens(false);
                 break;
-            case 1:
+            case 0x01:
                 stats_print_tokens(true);
                 break;
-            case 2:
+            case 0x02:
                 stats_print_tokens_csv();
                 break;
-            case 3:
+            case 0x03:
                 stats_print_tokens_csv_runmode(RunModeRun);
                 break;
-            case 4:
+            case 0x04:
                 stats_print_function_parameter_counts(false);
                 break;
-            case 5:
+            case 0x05:
                 stats_print_function_parameter_counts(true);
                 break;
-            case 6:
+            case 0x06:
                 stats_print_watermarks();
                 break;
-            case 7:
+            case 0x07:
                 stats_print_assignments();
                 break;
-            case 8:
+            case 0x08:
                 stats_print_assignments_csv();
                 break;
-            case 9:
+            case 0x09:
+                stats_print_expressions_summary();
+                break;
+            case 0x0a:
                 stats_print_expressions();
                 break;
             default:

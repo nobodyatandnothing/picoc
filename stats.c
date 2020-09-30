@@ -413,28 +413,30 @@ void stats_log_expression_parse(struct ParseState *Parser)
         ParserCopy(&PreState, Parser);
         LexGetToken(Parser, NULL, true);
 
-        if (ExpressionChainListHead == NULL) {
-            ExpressionChainListHead = malloc(sizeof(struct ExpressionChainListNode));
+        if (Parser->pc->CollectFullExpressions) {
             if (ExpressionChainListHead == NULL) {
-                fprintf(stderr, "Error allocating memory for expression chain stats\n");
-                exit(1);
+                ExpressionChainListHead = malloc(sizeof(struct ExpressionChainListNode));
+                if (ExpressionChainListHead == NULL) {
+                    fprintf(stderr, "Error allocating memory for expression chain stats\n");
+                    exit(1);
+                }
+                ExpressionChainListTail = ExpressionChainListHead;
+            } else {
+                struct ExpressionChainListNode *NewNode = malloc(sizeof(struct ExpressionChainListNode));
+                if (NewNode == NULL) {
+                    fprintf(stderr, "Error allocating memory for expression chain stats\n");
+                    exit(1);
+                }
+                ExpressionChainListTail->Next = NewNode;
+                ExpressionChainListTail = NewNode;
             }
-            ExpressionChainListTail = ExpressionChainListHead;
-        } else {
-            struct ExpressionChainListNode *NewNode = malloc(sizeof(struct ExpressionChainListNode));
-            if (NewNode == NULL) {
-                fprintf(stderr, "Error allocating memory for expression chain stats\n");
-                exit(1);
-            }
-            ExpressionChainListTail->Next = NewNode;
-            ExpressionChainListTail = NewNode;
+            ExpressionChainListTail->ExpressionChainHead = NULL;
+            ExpressionChainListTail->Next = NULL;
+            CurrentExpression = NULL;
+            ExpressionChainListTail->Coordinate.FileName = strdup(Parser->FileName);
+            ExpressionChainListTail->Coordinate.Line = Parser->Line;
+            ExpressionChainListTail->Coordinate.Column = Parser->CharacterPos;
         }
-        ExpressionChainListTail->ExpressionChainHead = NULL;
-        ExpressionChainListTail->Next = NULL;
-        CurrentExpression = NULL;
-        ExpressionChainListTail->Coordinate.FileName = strdup(Parser->FileName);
-        ExpressionChainListTail->Coordinate.Line = Parser->Line;
-        ExpressionChainListTail->Coordinate.Column = Parser->CharacterPos;
 
 
         if (Parser->pc->PrintExpressions) {
@@ -473,26 +475,28 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
 
         ExpressionCounts[Type][Op][TopType][BottomType]++;
 
-        if (ExpressionChainListTail != NULL) {
-            struct ExpressionChainNode *NewNode = malloc(sizeof(struct ExpressionChainNode));
-            if (NewNode == NULL) {
-                fprintf(stderr, "Error allocating memory for expression chain stats\n");
-                exit(1);
-            }
-            NewNode->Next = NULL;
+        if (parser->pc->CollectFullExpressions) {
+            if (ExpressionChainListTail != NULL) {
+                struct ExpressionChainNode *NewNode = malloc(sizeof(struct ExpressionChainNode));
+                if (NewNode == NULL) {
+                    fprintf(stderr, "Error allocating memory for expression chain stats\n");
+                    exit(1);
+                }
+                NewNode->Next = NULL;
 
-            if (ExpressionChainListTail->ExpressionChainHead == NULL) {
-                ExpressionChainListTail->ExpressionChainHead = NewNode;
-            } else {
-                CurrentExpression->Next = NewNode;
+                if (ExpressionChainListTail->ExpressionChainHead == NULL) {
+                    ExpressionChainListTail->ExpressionChainHead = NewNode;
+                } else {
+                    CurrentExpression->Next = NewNode;
+                }
+                CurrentExpression = NewNode;
             }
-            CurrentExpression = NewNode;
+
+            CurrentExpression->Expression.Type = Type;
+            CurrentExpression->Expression.Op = Op;
+            CurrentExpression->Expression.BottomType = BottomType;
+            CurrentExpression->Expression.TopType = TopType;
         }
-
-        CurrentExpression->Expression.Type = Type;
-        CurrentExpression->Expression.Op = Op;
-        CurrentExpression->Expression.BottomType = BottomType;
-        CurrentExpression->Expression.TopType = TopType;
 
         if (parser->pc->PrintExpressions) {
             const char *TopTypeName = TopValue ? BaseTypeNames[TopType] : "";
@@ -636,6 +640,51 @@ void stats_print_assignments_csv(void)
 }
 
 
+void stats_print_expressions_summary(void)
+{
+    for (int Type = 0; Type < NUM_EXPRESSION_TYPES; Type++) {
+        for (int Op = 0; Op < NUM_OPERATORS; Op++) {
+            for (int TopType = 0; TopType < NUM_BASE_TYPES; TopType++) {
+                for (int BottomType = 0; BottomType < NUM_BASE_TYPES; BottomType++) {
+                    unsigned int count = ExpressionCounts[Type][Op][TopType][BottomType];
+                    if (count > 0) {
+                        const char *TopTypeName = BaseTypeNames[TopType];
+                        const char *BottomTypeName = BaseTypeNames[BottomType];
+                        const char *OpSymbol = OperatorSymbols[Op];
+
+                        switch (Type) {
+                            case ExpressionInfix:
+                                if (Op == TokenAssign) {
+                                    printf("%8d   assign expressions of type   var<%s> = %s\n", count, BottomTypeName, TopTypeName);
+                                } else if (Op == TokenLeftSquareBracket) {
+                                    printf("%8d    array expressions of type   arr<%s>[%s]\n", count, BottomTypeName, TopTypeName);
+                                } else {
+                                    printf("%8d    infix expressions of type   %s %s %s\n", count, BottomTypeName, OpSymbol, TopTypeName);
+                                }
+                                break;
+                            case ExpressionPrefix:
+                                printf("%8d   prefix expressions of type   %s%s\n", count, OpSymbol, TopTypeName);
+                                break;
+                            case ExpressionPostfix:
+                                printf("%8d  postfix expressions of type   %s%s\n", count, TopTypeName, OpSymbol);
+                                break;
+                            case ExpressionReturn:
+                                printf("%8d   return expressions of type   ret<%s> = %s\n", count, BottomTypeName, TopTypeName);
+                                break;
+                            default:
+                                printf("Warning: Invalid expression type\n");
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    printf("\nMaximum expression depth: %d\n", ExpressionWatermark);
+}
+
+
 void stats_print_expressions(void)
 {
     struct ExpressionChainListNode *ExpressionChain = ExpressionChainListHead;
@@ -687,46 +736,5 @@ void stats_print_expressions(void)
         ExpressionChain = ExpressionChain->Next;
     }
 
-    printf("\n\n");
-
-    for (int Type = 0; Type < NUM_EXPRESSION_TYPES; Type++) {
-        for (int Op = 0; Op < NUM_OPERATORS; Op++) {
-            for (int TopType = 0; TopType < NUM_BASE_TYPES; TopType++) {
-                for (int BottomType = 0; BottomType < NUM_BASE_TYPES; BottomType++) {
-                    unsigned int count = ExpressionCounts[Type][Op][TopType][BottomType];
-                    if (count > 0) {
-                        const char *TopTypeName = BaseTypeNames[TopType];
-                        const char *BottomTypeName = BaseTypeNames[BottomType];
-                        const char *OpSymbol = OperatorSymbols[Op];
-
-                        switch (Type) {
-                            case ExpressionInfix:
-                                if (Op == TokenAssign) {
-                                    printf("%7d   assign expressions of type   var<%s> = %s\n", count, BottomTypeName, TopTypeName);
-                                } else if (Op == TokenLeftSquareBracket) {
-                                    printf("%7d    array expressions of type   arr<%s>[%s]\n", count, BottomTypeName, TopTypeName);
-                                } else {
-                                    printf("%7d    infix expressions of type   %s %s %s\n", count, BottomTypeName, OpSymbol, TopTypeName);
-                                }
-                                break;
-                            case ExpressionPrefix:
-                                printf("%7d   prefix expressions of type   %s%s\n", count, OpSymbol, TopTypeName);
-                                break;
-                            case ExpressionPostfix:
-                                printf("%7d  postfix expressions of type   %s%s\n", count, TopTypeName, OpSymbol);
-                                break;
-                            case ExpressionReturn:
-                                printf("%7d   return expressions of type   ret<%s> = %s\n", count, BottomTypeName, TopTypeName);
-                                break;
-                            default:
-                                printf("Warning: Invalid expression type\n");
-                                break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    printf("\nMaximum expression depth: %d\n", ExpressionWatermark);
+    printf("\n");
 }

@@ -536,6 +536,7 @@ struct Picoc_Struct {
 
     /* stats */
     int CollectStats;
+    int CollectFullExpressions;
     int PrintStats;
     int PrintExpressions;
 };
