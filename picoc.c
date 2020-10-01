@@ -150,7 +150,10 @@ int main(int argc, char **argv)
                 stats_print_expressions_summary();
                 break;
             case 0x0a:
-                stats_print_expressions();
+                stats_print_expression_chains();
+                break;
+            case 0x0b:
+                stats_print_expression_chains_summary();
                 break;
             default:
                 break;

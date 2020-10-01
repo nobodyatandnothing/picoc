@@ -2,7 +2,11 @@ float a = 1.0 + 2l;
 int b;
 
 int main(void) {
+    a = 1 * 2;
+    a = 1 + 2;
     a = 1 + 2 * 3;
+    b = 1 + 2 * 3;
+    b = 2 + 3;
     b = 2 + 3;
 
     int c = 0;

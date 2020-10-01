@@ -52,6 +52,7 @@ void stats_print_types_list(void);
 void stats_print_assignments(void);
 void stats_print_assignments_csv(void);
 void stats_print_expressions_summary(void);
-void stats_print_expressions(void);
+void stats_print_expression_chains_summary(void);
+void stats_print_expression_chains(void);
 
 #endif //PICOC_STATS_H
