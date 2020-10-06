@@ -543,7 +543,7 @@ void ParseFor(struct ParseState *Parser)
 
     ParserCopyPos(&After, Parser);
 
-    if (Parser->Mode == RunModeRun)
+    if (Parser->Mode == RunModeRun || OldMode == RunModeRun)
         stats_log_loop_entry(Parser);
 
     while (Condition && Parser->Mode == RunModeRun) {
@@ -578,7 +578,7 @@ void ParseFor(struct ParseState *Parser)
 
     ParserCopyPos(Parser, &After);
 
-    if (Parser->Mode == RunModeRun)
+    if (Parser->Mode == RunModeRun || OldMode == RunModeRun)
         stats_log_loop_exit(Parser);
 }
 
