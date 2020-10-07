@@ -282,13 +282,15 @@ void stats_traverse_expressions_tree(struct ExpressionChainItem *Node);
 unsigned int FunctionParameterCounts[PARAMETER_MAX + 1] = {0};
 unsigned int FunctionParameterDynamicCounts[PARAMETER_MAX + 1] = {0};
 unsigned int FunctionCallDepth = 0;
-unsigned int FunctionCallWatermark = 0;
+unsigned int FunctionCallMaxDepth = 0;
 unsigned int LoopDepth = 0;
-unsigned int LoopWatermark = 0;
+unsigned int LoopMaxDepth = 0;
 unsigned int ConditionalDepth = 0;
-unsigned int ConditionalWatermark = 0;
+unsigned int ConditionalMaxDepth = 0;
 unsigned int ExpressionDepth = 0;
-unsigned int ExpressionWatermark = 0;
+unsigned int ExpressionMaxDepth = 0;
+unsigned int StackFramesDepth = 0;
+unsigned int StackFramesMaxDepth = 0;
 unsigned int ExpressionCounts[NUM_EXPRESSION_TYPES][NUM_OPERATORS][NUM_BASE_TYPES][NUM_BASE_TYPES] = {{{{0}}}};
 struct ExpressionChainListNode *ExpressionChainListHead = NULL;
 struct ExpressionChainListNode *ExpressionChainListTail = NULL;
@@ -342,12 +344,12 @@ void stats_log_function_entry(struct ParseState *parser, int argCount)
     if (parser->pc->CollectStats) {
         FunctionParameterDynamicCounts[argCount]++;
         FunctionCallDepth++;
-        if (FunctionCallDepth > FunctionCallWatermark) {
-            FunctionCallWatermark = FunctionCallDepth;
+        if (FunctionCallDepth > FunctionCallMaxDepth) {
+            FunctionCallMaxDepth = FunctionCallDepth;
         }
         if (parser->pc->PrintStats) {
             fprintf(stderr, "Entering function (current call depth %u, max %u) at %s:%d:%d\n",
-                    FunctionCallDepth, FunctionCallWatermark, parser->FileName, parser->Line, parser->CharacterPos);
+                    FunctionCallDepth, FunctionCallMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -359,7 +361,7 @@ void stats_log_function_exit(struct ParseState *parser)
         FunctionCallDepth--;
         if (parser->pc->PrintStats) {
             fprintf(stderr, "Leaving function (current call depth %u, max %u) at %s:%d:%d\n",
-                    FunctionCallDepth, FunctionCallWatermark, parser->FileName, parser->Line, parser->CharacterPos);
+                    FunctionCallDepth, FunctionCallMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -369,12 +371,12 @@ void stats_log_loop_entry(struct ParseState *parser)
 {
     if (parser->pc->CollectStats) {
         LoopDepth++;
-        if (LoopDepth > LoopWatermark) {
-            LoopWatermark = LoopDepth;
+        if (LoopDepth > LoopMaxDepth) {
+            LoopMaxDepth = LoopDepth;
         }
         if (parser->pc->PrintStats) {
             fprintf(stderr, "Entering loop (current nesting depth %u, max %u) at %s:%d:%d\n",
-                    LoopDepth, LoopWatermark, parser->FileName, parser->Line, parser->CharacterPos);
+                    LoopDepth, LoopMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -386,7 +388,7 @@ void stats_log_loop_exit(struct ParseState *parser)
         LoopDepth--;
         if (parser->pc->PrintStats) {
             fprintf(stderr, "Leaving loop (current nesting depth %u, max %u) at %s:%d:%d\n",
-                    LoopDepth, LoopWatermark, parser->FileName, parser->Line, parser->CharacterPos);
+                    LoopDepth, LoopMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -396,12 +398,12 @@ void stats_log_conditional_entry(struct ParseState *parser, int condition)
 {
     if (parser->pc->CollectStats && condition) {
         ConditionalDepth++;
-        if (ConditionalDepth > ConditionalWatermark) {
-            ConditionalWatermark = ConditionalDepth;
+        if (ConditionalDepth > ConditionalMaxDepth) {
+            ConditionalMaxDepth = ConditionalDepth;
         }
         if (parser->pc->PrintStats) {
             fprintf(stderr, "Entering conditional (current nesting depth %u, max %u) at %s:%d:%d\n",
-                    ConditionalDepth, ConditionalWatermark, parser->FileName, parser->Line, parser->CharacterPos);
+                    ConditionalDepth, ConditionalMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -413,7 +415,7 @@ void stats_log_conditional_exit(struct ParseState *parser, int condition)
         ConditionalDepth--;
         if (parser->pc->PrintStats) {
             fprintf(stderr, "Leaving conditional (current nesting depth %u, max %u) at %s:%d:%d\n",
-                    ConditionalDepth, ConditionalWatermark, parser->FileName, parser->Line, parser->CharacterPos);
+                    ConditionalDepth, ConditionalMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
 }
@@ -496,8 +498,8 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
         enum BaseType BottomType = BottomValue ? BottomValue->Typ->Base : 0;
 
         ExpressionDepth++;
-        if (ExpressionDepth > ExpressionWatermark) {
-            ExpressionWatermark = ExpressionDepth;
+        if (ExpressionDepth > ExpressionMaxDepth) {
+            ExpressionMaxDepth = ExpressionDepth;
         }
 
         if (Type == ExpressionInfix && Op == TokenLeftSquareBracket && BottomValue && BottomType == TypeArray) {
@@ -625,6 +627,33 @@ void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionT
 }
 
 
+void stats_log_stack_frame_add(struct ParseState *parser, const char *funcName)
+{
+    if (parser->pc->CollectStats) {
+        StackFramesDepth++;
+        if (StackFramesDepth > StackFramesMaxDepth) {
+            StackFramesMaxDepth = StackFramesDepth;
+        }
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Adding stack frame for '%s()' (current depth %u, max %u) at %s:%d:%d\n",
+                    funcName, StackFramesDepth, StackFramesMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
+        }
+    }
+}
+
+
+void stats_log_stack_frame_pop(struct ParseState *parser)
+{
+    if (parser->pc->CollectStats) {
+        StackFramesDepth--;
+        if (parser->pc->PrintStats) {
+            fprintf(stderr, "Popping stack frame (current depth %u, max %u) at %s:%d:%d\n",
+                    StackFramesDepth, StackFramesMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
+        }
+    }
+}
+
+
 void stats_print_tokens(int all)
 {
     printf("\n*********\nToken stats:\n");
@@ -699,9 +728,9 @@ void stats_print_function_parameter_counts(bool dynamic)
 }
 
 
-void stats_print_watermarks(void)
+void stats_print_max_depths(void)
 {
-    printf("%u,%u,%u,%u\n", FunctionCallWatermark, LoopWatermark, ConditionalWatermark, ExpressionWatermark);
+    printf("%u,%u,%u,%u,%u\n", FunctionCallMaxDepth, LoopMaxDepth, ConditionalMaxDepth, ExpressionMaxDepth, StackFramesMaxDepth);
 }
 
 
@@ -774,7 +803,7 @@ void stats_print_expressions_summary(void)
     }
 
     printf("\nTotal expressions: %d\n", TotalExpressions);
-    printf("Maximum expression chain depth: %d\n", ExpressionWatermark);
+    printf("Maximum expression chain depth: %d\n", ExpressionMaxDepth);
 }
 
 
@@ -853,7 +882,7 @@ void stats_print_expression_chains_summary(void)
 
     printf("\nTotal expressions: %d\n", TotalExpressions);
     printf("Total expression chains: %d\n", TotalExpressionChains);
-    printf("Maximum expression chain depth: %d\n", ExpressionWatermark);
+    printf("Maximum expression chain depth: %d\n", ExpressionMaxDepth);
 }
 
 

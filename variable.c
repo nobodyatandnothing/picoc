@@ -2,6 +2,7 @@
  * variables */
 
 #include "interpreter.h"
+#include "stats.h"
 
 /* maximum size of a value to temporarily copy while we create a variable */
 #define MAX_TMP_COPY_BUF (8192)
@@ -483,6 +484,8 @@ void VariableStackFrameAdd(struct ParseState *Parser, const char *FuncName,
         LOCAL_TABLE_SIZE, false);
     NewFrame->PreviousStackFrame = Parser->pc->TopStackFrame;
     Parser->pc->TopStackFrame = NewFrame;
+
+    stats_log_stack_frame_add(Parser, FuncName);
 }
 
 /* remove a stack frame */
@@ -494,6 +497,8 @@ void VariableStackFramePop(struct ParseState *Parser)
     ParserCopy(Parser, &Parser->pc->TopStackFrame->ReturnParser);
     Parser->pc->TopStackFrame = Parser->pc->TopStackFrame->PreviousStackFrame;
     HeapPopStackFrame(Parser->pc);
+
+    stats_log_stack_frame_pop(Parser);
 }
 
 /* get a string literal. assumes that Ident is already

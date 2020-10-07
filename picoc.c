@@ -138,7 +138,7 @@ int main(int argc, char **argv)
                 stats_print_function_parameter_counts(true);
                 break;
             case 0x06:
-                stats_print_watermarks();
+                stats_print_max_depths();
                 break;
             case 0x07:
                 stats_print_assignments();
