@@ -722,7 +722,7 @@ void stats_log_stack_pop(struct ParseState *parser, struct Value *Var)
 
 void stats_log_variable_definition(struct ParseState *parser, char *Ident, struct ValueType *Typ, int IsGlobal)
 {
-    if (parser->pc->CollectStats && Typ) {
+    if (parser && parser->pc->CollectStats && Typ) {
         int Size = Typ->Sizeof;
 
         if (IsGlobal) {
