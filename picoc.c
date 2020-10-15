@@ -119,6 +119,7 @@ int main(int argc, char **argv)
      * 0xb: Print summary information about expression chains
      * 0xc: Print information about stack depths and frame sizes
      * 0xd: Print information about stack depths and frame sizes in CSV format
+     * 0xe: Print summary of expressions encountered during execution and their counts, in CSV format
      *
      * Add 0x0010 to each type to also print token information to stderr in real-time as they are parsed.
      * Add 0x0100 to each type to also print expressions information to stderr in real-time as they are executed.
@@ -168,6 +169,9 @@ int main(int argc, char **argv)
                 break;
             case 0x0d:
                 stats_print_stack_info_csv();
+                break;
+            case 0x0e:
+                stats_print_expressions_summary_csv();
                 break;
             default:
                 break;

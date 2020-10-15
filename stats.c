@@ -910,6 +910,61 @@ void stats_print_expressions_summary(void)
 }
 
 
+void stats_print_expressions_summary_csv(void)
+{
+    for (int Type = 0; Type < NUM_EXPRESSION_TYPES; Type++) {
+        for (int Op = 0; Op < NUM_OPERATORS; Op++) {
+            for (int TopType = 0; TopType < NUM_BASE_TYPES; TopType++) {
+                for (int BottomType = 0; BottomType < NUM_BASE_TYPES; BottomType++) {
+                    unsigned int count = ExpressionCounts[Type][Op][TopType][BottomType];
+                    if (count > 0) {
+                        const char *TopTypeName = BaseTypeNames[TopType];
+                        const char *BottomTypeName = BaseTypeNames[BottomType];
+                        const char *OpSymbol = OperatorSymbols[Op];
+                        char ExpressionString[64];
+                        union ExpressionHash Hash = {
+                                .Components = {
+                                        .Type = Type,
+                                        .Op = Op,
+                                        .TopType = TopType,
+                                        .BottomType = BottomType
+                                }
+                        };
+
+                        switch (Type) {
+                            case ExpressionInfix:
+                                if (Op == TokenAssign) {
+                                    snprintf(ExpressionString, 64, "var<%s> = %s", BottomTypeName, TopTypeName);
+                                } else if (Op == TokenLeftSquareBracket) {
+                                    snprintf(ExpressionString, 64, "arr<%s>[%s]", BottomTypeName, TopTypeName);
+                                } else {
+                                    snprintf(ExpressionString, 64, "%s %s %s", BottomTypeName, OpSymbol, TopTypeName);
+                                }
+                                break;
+                            case ExpressionPrefix:
+                                snprintf(ExpressionString, 64, "%s%s", OpSymbol, TopTypeName);
+                                break;
+                            case ExpressionPostfix:
+                                snprintf(ExpressionString, 64, "%s%s", TopTypeName, OpSymbol);
+                                break;
+                            case ExpressionReturn:
+                                snprintf(ExpressionString, 64, "ret<%s> = %s", BottomTypeName, TopTypeName);
+                                break;
+                            default:
+                                fprintf(stderr, "Error: Invalid expression type %d\n", Type);
+                                exit(1);
+                                break;
+                        }
+
+                        printf("%u,%d,\"%s\"\n", Hash.Hash, count, ExpressionString);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 void stats_print_expression(enum ExpressionType Type, enum LexToken Op, enum BaseType TopType, enum BaseType BottomType)
 {
     const char *TopTypeName = BaseTypeNames[TopType];

@@ -57,6 +57,7 @@ void stats_print_types_list(void);
 void stats_print_assignments(void);
 void stats_print_assignments_csv(void);
 void stats_print_expressions_summary(void);
+void stats_print_expressions_summary_csv(void);
 void stats_print_expression_chains_summary(void);
 void stats_print_expression_chains(void);
 void stats_print_stack_info(void);
