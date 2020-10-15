@@ -12,6 +12,7 @@
 #define NUM_OPERATORS 45
 #define NUM_EXPRESSION_TYPES 4
 #define EXPRESSION_CHAIN_STACK_SIZE 100
+#define MAX_STACK_FRAMES 100
 
 struct LexTokenStat {
     const char* name;
@@ -274,6 +275,13 @@ const char *OperatorSymbols[NUM_OPERATORS] = {
         ")"
 };
 
+struct StackFrameStats {
+    unsigned int LvalueAllocation;
+    unsigned int TotalAllocation;
+    unsigned int CumulativeLvalueAllocation;
+    unsigned int CumulativeTotalAllocation;
+};
+
 
 void stats_print_expression(enum ExpressionType Type, enum LexToken Op, enum BaseType TopType, enum BaseType BottomType);
 void stats_traverse_expressions_tree(struct ExpressionChainItem *Node);
@@ -298,9 +306,14 @@ struct ExpressionChainNode *CurrentExpression = NULL;
 struct ExpressionChainItem ExpressionChainsRoot = {{0}};
 struct ExpressionChainItem *ExpressionChainTreePosition = NULL;
 union ExpressionHash ExpressionChainStack[EXPRESSION_CHAIN_STACK_SIZE];
-int ExpressionChainStackTop = 0;
-int TotalExpressions = 0;
-int TotalExpressionChains = 0;
+unsigned int ExpressionChainStackTop = 0;
+unsigned int TotalExpressions = 0;
+unsigned int TotalExpressionChains = 0;
+struct StackFrameStats StackFrameAllocations[MAX_STACK_FRAMES] = {{0}};
+unsigned int MaxStackFrameLvalueAllocation = 0;
+unsigned int MaxStackFrameTotalAllocation = 0;
+unsigned int MaxCumulativeLvalueAllocation = 0;
+unsigned int MaxCumulativeTotalAllocation = 0;
 
 
 void stats_log_statement(enum LexToken token, struct ParseState *parser)
@@ -634,8 +647,20 @@ void stats_log_stack_frame_add(struct ParseState *parser, const char *funcName)
         if (StackFramesDepth > StackFramesMaxDepth) {
             StackFramesMaxDepth = StackFramesDepth;
         }
-        if (parser->pc->PrintStats) {
-            fprintf(stderr, "Adding stack frame for '%s()' (current depth %u, max %u) at %s:%d:%d\n",
+
+        StackFrameAllocations[StackFramesDepth].TotalAllocation = 0;
+        StackFrameAllocations[StackFramesDepth].LvalueAllocation = 0;
+        StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation = StackFrameAllocations[StackFramesDepth - 1].CumulativeTotalAllocation;
+        StackFrameAllocations[StackFramesDepth].CumulativeLvalueAllocation = StackFrameAllocations[StackFramesDepth - 1].CumulativeLvalueAllocation;
+
+        if (parser->pc->PrintStats || parser->pc->PrintMemory) {
+            fprintf(stderr, "\n");
+            for (int i = 0; i < StackFramesDepth - 1; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "***\n");
+            for (int i = 0; i < StackFramesDepth - 1; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "Adding stack frame for '%s()' (new depth %u, max depth %u) at %s:%d:%d\n",
                     funcName, StackFramesDepth, StackFramesMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
         }
     }
@@ -646,9 +671,87 @@ void stats_log_stack_frame_pop(struct ParseState *parser)
 {
     if (parser->pc->CollectStats) {
         StackFramesDepth--;
-        if (parser->pc->PrintStats) {
-            fprintf(stderr, "Popping stack frame (current depth %u, max %u) at %s:%d:%d\n",
+        if (parser->pc->PrintStats || parser->pc->PrintMemory) {
+            for (int i = 0; i < StackFramesDepth; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "Popping stack frame (new depth %u, max depth %u) at %s:%d:%d\n",
                     StackFramesDepth, StackFramesMaxDepth, parser->FileName, parser->Line, parser->CharacterPos);
+            for (int i = 0; i < StackFramesDepth; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "***\n\n");
+        }
+    }
+}
+
+
+void stats_log_stack_allocation(struct ParseState *parser, int Size, int IsLValue)
+{
+    if (parser->pc->CollectStats && (parser->Mode == RunModeRun) && (strcmp(parser->FileName, "startup") != 0)) {
+
+        StackFrameAllocations[StackFramesDepth].TotalAllocation += Size;
+        if (StackFrameAllocations[StackFramesDepth].TotalAllocation > MaxStackFrameTotalAllocation)
+            MaxStackFrameTotalAllocation = StackFrameAllocations[StackFramesDepth].TotalAllocation;
+
+        StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation += Size;
+        if (StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation > MaxCumulativeTotalAllocation)
+            MaxCumulativeTotalAllocation = StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation;
+
+        if (IsLValue) {
+            StackFrameAllocations[StackFramesDepth].LvalueAllocation += Size;
+            if (StackFrameAllocations[StackFramesDepth].LvalueAllocation > MaxStackFrameLvalueAllocation)
+                MaxStackFrameLvalueAllocation = StackFrameAllocations[StackFramesDepth].LvalueAllocation;
+
+            StackFrameAllocations[StackFramesDepth].CumulativeLvalueAllocation += Size;
+            if (StackFrameAllocations[StackFramesDepth].CumulativeLvalueAllocation > MaxCumulativeLvalueAllocation)
+                MaxCumulativeLvalueAllocation = StackFrameAllocations[StackFramesDepth].CumulativeLvalueAllocation;
+        }
+
+        if (parser->pc->PrintMemory) {
+            for (int i = 0; i < StackFramesDepth; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "%s:%d:%d  Allocated %d bytes on stack (total %d/%d) %s\n",
+                    parser->FileName, parser->Line, parser->CharacterPos, Size,
+                    StackFrameAllocations[StackFramesDepth].TotalAllocation,
+                    StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation,
+                    IsLValue ? "(lvalue)" : "");
+        }
+    }
+}
+
+
+void stats_log_stack_pop(struct ParseState *parser, struct Value *Var)
+{
+    if (parser->pc->CollectStats && (parser->Mode == RunModeRun) && (strcmp(parser->FileName, "startup") != 0)) {
+        int Size = Var->Typ->Sizeof;
+
+        StackFrameAllocations[StackFramesDepth].TotalAllocation -= Size;
+        StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation -= Size;
+        if (Var->IsLValue) {
+            StackFrameAllocations[StackFramesDepth].LvalueAllocation -= Size;
+            StackFrameAllocations[StackFramesDepth].CumulativeLvalueAllocation -= Size;
+        }
+
+        if (parser->pc->PrintMemory) {
+            for (int i = 0; i < StackFramesDepth; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "%s:%d:%d  Popped %d bytes off stack (total %d/%d) %s\n",
+                    parser->FileName, parser->Line, parser->CharacterPos, Size,
+                    StackFrameAllocations[StackFramesDepth].TotalAllocation,
+                    StackFrameAllocations[StackFramesDepth].CumulativeTotalAllocation,
+                    Var->IsLValue ? "(lvalue)" : "");
+        }
+    }
+}
+
+
+void stats_log_variable_definition(struct ParseState *parser, char *Ident, struct ValueType *Typ)
+{
+    if (parser->pc->CollectStats) {
+        if (parser->pc->PrintMemory) {
+            for (int i = 0; i < StackFramesDepth; i++)
+                fprintf(stderr, "  ");
+            fprintf(stderr, "%s:%d:%d  Defining variable '%s' of size %d bytes...\n",
+                    parser->FileName, parser->Line, parser->CharacterPos, Ident, Typ->Sizeof);
         }
     }
 }
@@ -913,4 +1016,25 @@ void stats_print_expression_chains(void)
     }
 
     printf("\n");
+}
+
+
+void stats_print_stack_info(void)
+{
+    printf("Maximum stack frame depth: %d\n", StackFramesMaxDepth);
+    printf("Maximum individual stack frame size: %d bytes\n", MaxStackFrameTotalAllocation);
+    printf("Maximum cumulative stack frame size: %d bytes\n", MaxCumulativeTotalAllocation);
+    printf("Maximum individual stack frame size (lvalues only): %d bytes\n", MaxStackFrameLvalueAllocation);
+    printf("Maximum cumulative stack frame size (lvalues only): %d bytes\n", MaxCumulativeLvalueAllocation);
+}
+
+
+void stats_print_stack_info_csv(void)
+{
+    printf("%d,%d,%d,%d,%d\n",
+           StackFramesMaxDepth,
+           MaxStackFrameTotalAllocation,
+           MaxCumulativeTotalAllocation,
+           MaxStackFrameLvalueAllocation,
+           MaxCumulativeLvalueAllocation);
 }

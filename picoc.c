@@ -69,6 +69,10 @@ int main(int argc, char **argv)
         }
         CollectStats = true;
         pc.CollectStats = true;
+        if (StatsType >= 0x1000) {
+            pc.PrintMemory = true;
+            StatsType -= 0x1000;
+        }
         if (StatsType >= 0x100) {
             pc.PrintExpressions = true;
             StatsType -= 0x100;
@@ -112,9 +116,13 @@ int main(int argc, char **argv)
      * 0x8: Print number of assignments to each basic variable type, in CSV format (one row, no header row)
      * 0x9: Print summary of expressions encountered during execution and their counts
      * 0xa: Print full list of expressions encountered during execution
+     * 0xb: Print summary information about expression chains
+     * 0xc: Print information about stack depths and frame sizes
+     * 0xd: Print information about stack depths and frame sizes in CSV format
      *
-     * Add 0x010 to each type to also print token information to stderr in real-time as they are parsed.
-     * Add 0x100 to each type to also print expressions information to stderr in real-time as they are executed.
+     * Add 0x0010 to each type to also print token information to stderr in real-time as they are parsed.
+     * Add 0x0100 to each type to also print expressions information to stderr in real-time as they are executed.
+     * Add 0x1000 to each type to also print memory information to stderr in real-time as it is allocated.
      */
 
     if (CollectStats) {
@@ -154,6 +162,12 @@ int main(int argc, char **argv)
                 break;
             case 0x0b:
                 stats_print_expression_chains_summary();
+                break;
+            case 0x0c:
+                stats_print_stack_info();
+                break;
+            case 0x0d:
+                stats_print_stack_info_csv();
                 break;
             default:
                 break;

@@ -109,6 +109,9 @@ struct Value *VariableAllocValueAndData(Picoc *pc, struct ParseState *Parser,
 
     NewValue->OutOfScope = false;
 
+    if (!OnHeap && !IsLValue)
+        stats_log_stack_allocation(Parser, DataSize, IsLValue);
+
     return NewValue;
 }
 
@@ -121,6 +124,9 @@ struct Value *VariableAllocValueFromType(Picoc *pc, struct ParseState *Parser,
         IsLValue, LValueFrom, OnHeap);
     assert(Size >= 0 || Typ == &pc->VoidType);
     NewValue->Typ = Typ;
+
+    if (!OnHeap)
+        stats_log_stack_allocation(Parser, Typ->Sizeof, IsLValue);
 
     return NewValue;
 }
@@ -294,6 +300,8 @@ struct Value *VariableDefine(Picoc *pc, struct ParseState *Parser, char *Ident,
     struct Table * currentTable = (pc->TopStackFrame == NULL) ?
         &(pc->GlobalTable) : &(pc->TopStackFrame)->LocalTable;
 
+    stats_log_variable_definition(Parser, Ident, Typ);
+
 #ifdef DEBUG_VAR_SCOPE
     if (Parser) fprintf(stderr, "def %s %x (%s:%d:%d)\n", Ident, ScopeID,
         Parser->FileName, Parser->Line, Parser->CharacterPos);
@@ -454,10 +462,10 @@ void VariableStackPop(struct ParseState *Parser, struct Value *Var)
         if (Var->Val != NULL)
             HeapFreeMem(Parser->pc, Var->Val);
         Success = HeapPopStack(Parser->pc, Var, sizeof(struct Value));  /* free from heap */
-    } else if (Var->ValOnStack)
-        Success = HeapPopStack(Parser->pc, Var,
-        sizeof(struct Value)+TypeSizeValue(Var, false));  /* free from stack */
-    else
+    } else if (Var->ValOnStack) {
+        Success = HeapPopStack(Parser->pc, Var, sizeof(struct Value) + TypeSizeValue(Var, false));  /* free from stack */
+        stats_log_stack_pop(Parser, Var);
+    } else
         Success = HeapPopStack(Parser->pc, Var, sizeof(struct Value));  /* value isn't our problem */
 
     if (!Success)

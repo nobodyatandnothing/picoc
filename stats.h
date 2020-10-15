@@ -43,6 +43,9 @@ void stats_log_expression_stack_collapse(struct ParseState *parser);
 void stats_log_expression_evaluation(struct ParseState *parser, enum ExpressionType Type, enum LexToken Op, struct Value *BottomValue, struct Value *TopValue);
 void stats_log_stack_frame_add(struct ParseState *parser, const char *funcName);
 void stats_log_stack_frame_pop(struct ParseState *parser);
+void stats_log_stack_allocation(struct ParseState *parser, int Size, int IsLValue);
+void stats_log_stack_pop(struct ParseState *parser, struct Value *Var);
+void stats_log_variable_definition(struct ParseState *parser, char *Ident, struct ValueType *Typ);
 void stats_print_tokens(int all);
 void stats_print_tokens_csv(void);
 void stats_print_tokens_csv_runmode(enum RunMode runMode);
@@ -56,5 +59,7 @@ void stats_print_assignments_csv(void);
 void stats_print_expressions_summary(void);
 void stats_print_expression_chains_summary(void);
 void stats_print_expression_chains(void);
+void stats_print_stack_info(void);
+void stats_print_stack_info_csv(void);
 
 #endif //PICOC_STATS_H

@@ -539,6 +539,7 @@ struct Picoc_Struct {
     int CollectFullExpressions;
     int PrintStats;
     int PrintExpressions;
+    int PrintMemory;
 };
 
 /* table.c */
